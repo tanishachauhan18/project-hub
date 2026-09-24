@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Manage Faculty – Admin | ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="font-heading mb-1">Faculty Supervisors Directory</h2>
+    <p class="text-muted small mb-0">Overview of certified faculty guides, supervision capacity, and research specializations.</p>
+  </div>
+</div>
+
+<div class="ph-card bg-white shadow-sm overflow-hidden">
+  <div class="table-responsive">
+    <table class="ph-table">
+      <thead>
+        <tr>
+          <th>Faculty Member</th>
+          <th>Employee ID</th>
+          <th>Department</th>
+          <th>Research Specialization</th>
+          <th>Guided Projects</th>
+          <th>Account Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if faculty_list %}
+          {% for f in faculty_list %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="user-avatar-circle" style="width: 36px; height: 36px; font-size: 0.9rem;">{{ f.full_name[0] }}</div>
+                  <div>
+                    <strong>{{ f.full_name }}</strong>
+                    <div class="text-muted" style="font-size: 0.72rem;">{{ f.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><code>{{ f.roll_or_faculty_id or 'FAC-REG' }}</code></td>
+              <td><span class="small">{{ f.department }}</span></td>
+              <td><span class="small text-muted">{{ f.skills or 'Software Engineering' }}</span></td>
+              <td>
+                <span class="badge bg-primary-subtle text-primary">{{ f.guided_projects | length }} Projects</span>
+              </td>
+              <td><span class="badge bg-success-subtle text-success">Certified Guide</span></td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="6" class="text-center py-4 text-muted">No faculty members found.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

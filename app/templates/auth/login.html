@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Sign In – ProjectHub Academic Collaboration{% endblock %}
+
+{% block public_content %}
+<div class="container py-5 my-3">
+  <div class="row justify-content-center">
+    <div class="col-lg-5 col-md-8">
+      
+      <!-- Demo Fast Switcher Box -->
+      <div class="ph-card mb-4 p-3 bg-white border border-primary-subtle shadow-sm rounded-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <span class="badge bg-primary-subtle text-primary fw-bold"><i class="fas fa-bolt me-1"></i> Quick Demo Access</span>
+          <small class="text-muted">Instant 1-Click Role Login</small>
+        </div>
+        <form action="{{ url_for('auth.login') }}" method="POST" class="row g-2">
+          <div class="col-6">
+            <button type="submit" name="demo_role" value="student_leader" class="btn btn-sm btn-outline-primary w-100 py-2 text-start">
+              <i class="fas fa-crown text-warning me-1"></i> <strong>Student (Lead)</strong>
+              <div style="font-size: 0.68rem;" class="text-muted">Aarav Sharma</div>
+            </button>
+          </div>
+          <div class="col-6">
+            <button type="submit" name="demo_role" value="student_member" class="btn btn-sm btn-outline-info w-100 py-2 text-start">
+              <i class="fas fa-user-friends text-info me-1"></i> <strong>Student (Member)</strong>
+              <div style="font-size: 0.68rem;" class="text-muted">Priya Patel</div>
+            </button>
+          </div>
+          <div class="col-6">
+            <button type="submit" name="demo_role" value="faculty" class="btn btn-sm btn-outline-success w-100 py-2 text-start">
+              <i class="fas fa-chalkboard-teacher text-success me-1"></i> <strong>Faculty Guide</strong>
+              <div style="font-size: 0.68rem;" class="text-muted">Prof. Arvind Verma</div>
+            </button>
+          </div>
+          <div class="col-6">
+            <button type="submit" name="demo_role" value="admin" class="btn btn-sm btn-outline-dark w-100 py-2 text-start">
+              <i class="fas fa-shield-alt text-purple me-1"></i> <strong>Administrator</strong>
+              <div style="font-size: 0.68rem;" class="text-muted">Dr. Rajesh Mehta</div>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Standard Login Box -->
+      <div class="ph-card p-4 p-md-5 bg-white shadow-md rounded-4">
+        <div class="text-center mb-4">
+          <div class="brand-icon-box mx-auto mb-3">P</div>
+          <h3 class="font-heading mb-1">Welcome Back</h3>
+          <p class="text-muted small">Sign in to your ProjectHub academic account</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">University Email Address</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light text-muted"><i class="fas fa-envelope"></i></span>
+              <input type="email" name="email" class="form-control" placeholder="e.g. aarav.sharma@projecthub.edu" required autofocus>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between">
+              <label class="form-label fw-semibold small">Password</label>
+              <a href="{{ url_for('auth.forgot_password') }}" class="small text-decoration-none">Forgot password?</a>
+            </div>
+            <div class="input-group">
+              <span class="input-group-text bg-light text-muted"><i class="fas fa-lock"></i></span>
+              <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary-ph w-100 py-2 justify-content-center mt-2 mb-3">
+            <i class="fas fa-sign-in-alt me-2"></i> Sign In to Portal
+          </button>
+        </form>
+
+        <div class="text-center pt-3 border-top">
+          <span class="small text-muted">Don't have an account? </span>
+          <a href="{{ url_for('auth.register') }}" class="small fw-bold text-decoration-none">Register New Account</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

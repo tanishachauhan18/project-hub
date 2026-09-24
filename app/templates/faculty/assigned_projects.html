@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Assigned Projects – Faculty Hub | ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="font-heading mb-1">Supervised Project Directory</h2>
+    <p class="text-muted small mb-0">Directory of all academic projects under your supervision.</p>
+  </div>
+</div>
+
+<!-- Filters bar -->
+<div class="ph-card p-3 bg-white shadow-sm mb-4">
+  <form method="GET" action="{{ url_for('faculty.assigned_projects') }}" class="row g-2 align-items-center">
+    <div class="col-md-5">
+      <select name="domain" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">-- All Specialization Domains --</option>
+        {% for d in domains %}
+          <option value="{{ d }}" {% if current_domain == d %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-5">
+      <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">-- All Statuses --</option>
+        <option value="in_progress" {% if current_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+        <option value="under_review" {% if current_status == 'under_review' %}selected{% endif %}>Under Review / Submitted</option>
+        <option value="evaluated" {% if current_status == 'evaluated' %}selected{% endif %}>Evaluated / Completed</option>
+        <option value="guide_pending" {% if current_status == 'guide_pending' %}selected{% endif %}>Pending Request</option>
+      </select>
+    </div>
+    <div class="col-md-2 text-end">
+      <a href="{{ url_for('faculty.assigned_projects') }}" class="btn btn-sm btn-outline-secondary w-100">Reset</a>
+    </div>
+  </form>
+</div>
+
+{% if projects %}
+  <div class="row g-4 filterable-table">
+    {% for p in projects %}
+      <div class="col-lg-6">
+        <div class="ph-card bg-white shadow-sm p-4 h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge bg-primary-subtle text-primary">{{ p.domain }}</span>
+              <span class="badge-status badge-{{ p.status }}">{{ p.status.replace('_', ' ') }}</span>
+            </div>
+
+            <h4 class="font-heading mb-2">
+              <a href="{{ url_for('faculty.workspace', project_id=p.id) }}" class="text-navy text-decoration-none">{{ p.title }}</a>
+            </h4>
+            <p class="text-muted small mb-3">{{ p.abstract | truncate(140) }}</p>
+
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small fw-bold mb-1">
+                <span class="text-muted">Progress</span>
+                <span class="text-primary">{{ p.progress_percent }}%</span>
+              </div>
+              <div class="ph-progress-container">
+                <div class="ph-progress-bar" style="width: {{ p.progress_percent }}%;"></div>
+              </div>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 small mb-3">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-muted">Team Leader:</span>
+                <strong>{{ p.creator.full_name }} ({{ p.members | length }} members)</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-muted">Evaluation Status:</span>
+                {% if p.evaluation %}
+                  <span class="badge bg-success-subtle text-success">Grade {{ p.evaluation.grade }} ({{ p.evaluation.total_marks }}/100)</span>
+                {% else %}
+                  <span class="badge bg-warning-subtle text-dark">Pending Final Evaluation</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+            <a href="{{ url_for('faculty.evaluate', project_id=p.id) }}" class="btn btn-sm btn-outline-success">
+              <i class="fas fa-award me-1"></i> {% if p.evaluation %}Edit Evaluation{% else %}Grade Project{% endif %}
+            </a>
+            <a href="{{ url_for('faculty.workspace', project_id=p.id) }}" class="btn btn-sm btn-primary-ph">
+              <i class="fas fa-columns me-1"></i> Open Workspace
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="ph-card p-5 text-center bg-white shadow-sm">
+    <div class="stat-icon blue mx-auto mb-3"><i class="fas fa-search"></i></div>
+    <h5 class="font-heading mb-2">No Projects Match Selected Filters</h5>
+    <p class="text-muted small">Try resetting the domain or status filter options.</p>
+    <a href="{{ url_for('faculty.assigned_projects') }}" class="btn btn-outline-primary btn-sm">Clear Filters</a>
+  </div>
+{% endif %}
+{% endblock %}

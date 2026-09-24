@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Manage Students – Admin | ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="font-heading mb-1">Student Management Directory</h2>
+    <p class="text-muted small mb-0">Inspect enrolled students, verify status, and manage departmental allocations.</p>
+  </div>
+</div>
+
+<!-- Search & Department Filters -->
+<div class="ph-card p-3 bg-white shadow-sm mb-4">
+  <form method="GET" action="{{ url_for('admin.students') }}" class="row g-2 align-items-center">
+    <div class="col-md-6">
+      <input type="text" name="search" value="{{ search }}" class="form-control form-control-sm" placeholder="Search by name, roll number, or email...">
+    </div>
+    <div class="col-md-4">
+      <select name="dept" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">-- All Departments --</option>
+        {% for d in departments %}
+          <option value="{{ d }}" {% if dept == d %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-1">
+      <button type="submit" class="btn btn-sm btn-primary-ph flex-grow-1">Filter</button>
+      <a href="{{ url_for('admin.students') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+    </div>
+  </form>
+</div>
+
+<div class="ph-card bg-white shadow-sm overflow-hidden">
+  <div class="table-responsive">
+    <table class="ph-table">
+      <thead>
+        <tr>
+          <th>Student</th>
+          <th>Roll ID</th>
+          <th>Department</th>
+          <th>Account Status</th>
+          <th>Enrolled Projects</th>
+          <th>Joined</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if students %}
+          {% for student in students %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="user-avatar-circle" style="width: 34px; height: 34px; font-size: 0.85rem;">{{ student.full_name[0] }}</div>
+                  <div>
+                    <strong>{{ student.full_name }}</strong>
+                    <div class="text-muted" style="font-size: 0.72rem;">{{ student.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td><code>{{ student.roll_or_faculty_id or 'N/A' }}</code></td>
+              <td><span class="small">{{ student.department }}</span></td>
+              <td>
+                {% if student.is_approved %}
+                  <span class="badge bg-success-subtle text-success">Active / Approved</span>
+                {% else %}
+                  <span class="badge bg-warning-subtle text-warning">Pending Approval</span>
+                {% endif %}
+              </td>
+              <td><span class="badge bg-light text-dark border">{{ student.team_memberships | length }} Projects</span></td>
+              <td class="text-muted small">{{ student.created_at.strftime('%b %d, %Y') }}</td>
+              <td class="text-end">
+                <form action="{{ url_for('admin.toggle_student_status', user_id=student.id) }}" method="POST" class="d-inline">
+                  <button type="submit" class="btn btn-sm {% if student.is_approved %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="Toggle Activation">
+                    {% if student.is_approved %}<i class="fas fa-ban me-1"></i> Suspend{% else %}<i class="fas fa-check me-1"></i> Activate{% endif %}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="7" class="text-center py-4 text-muted">No students found matching your criteria.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

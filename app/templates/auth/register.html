@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Create Account – ProjectHub Academic Collaboration{% endblock %}
+
+{% block public_content %}
+<div class="container py-5 my-2">
+  <div class="row justify-content-center">
+    <div class="col-lg-7 col-md-10">
+      <div class="ph-card p-4 p-md-5 bg-white shadow-md rounded-4">
+        <div class="text-center mb-4">
+          <div class="brand-icon-box mx-auto mb-3">P</div>
+          <h3 class="font-heading mb-1">Create Your Account</h3>
+          <p class="text-muted small">Join your university's official project collaboration and evaluation network</p>
+        </div>
+
+        <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-4">
+          <i class="fas fa-info-circle fs-5"></i>
+          <div>
+            <strong>Important Policy:</strong> Student registrations are reviewed and activated by the Academic Administrator before project access is enabled.
+          </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Full Name</label>
+              <input type="text" name="full_name" class="form-control" placeholder="e.g. Aarav Sharma" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Academic Email Address</label>
+              <input type="email" name="email" class="form-control" placeholder="e.g. name@projecthub.edu" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Role in Institution</label>
+              <select name="role" class="form-select" id="roleSelect" required>
+                <option value="student" selected>Student (Undergrad / Postgrad)</option>
+                <option value="faculty">Faculty Guide / Professor</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small" id="idLabel">Roll / Registration Number</label>
+              <input type="text" name="roll_or_faculty_id" class="form-control" placeholder="e.g. CS2022-041" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Department</label>
+              <select name="department" class="form-select" required>
+                <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Cyber Security & Networks">Cyber Security & Networks</option>
+                <option value="Electronics & Communication">Electronics & Communication</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Contact Phone Number</label>
+              <input type="tel" name="phone" class="form-control" placeholder="+91 98765 00000">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Password</label>
+              <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Confirm Password</label>
+              <input type="password" name="confirm_password" class="form-control" placeholder="Re-enter password" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary-ph w-100 py-2 justify-content-center mt-4 mb-3">
+            <i class="fas fa-user-check me-2"></i> Submit Registration
+          </button>
+        </form>
+
+        <div class="text-center pt-3 border-top">
+          <span class="small text-muted">Already registered? </span>
+          <a href="{{ url_for('auth.login') }}" class="small fw-bold text-decoration-none">Sign In Here</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('roleSelect')?.addEventListener('change', function() {
+    const label = document.getElementById('idLabel');
+    if (this.value === 'faculty') {
+      label.innerText = 'Faculty Employee ID';
+    } else {
+      label.innerText = 'Roll / Registration Number';
+    }
+  });
+</script>
+{% endblock %}

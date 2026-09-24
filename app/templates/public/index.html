@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}ProjectHub – Academic Project Collaboration & Management System{% endblock %}
+
+{% block public_content %}
+<!-- Hero Section (SnapFlow Modern Theme with Academic Touch) -->
+<section class="py-5 text-center position-relative overflow-hidden" style="background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 135, 102, 0.08) 0%, rgba(230, 244, 241, 0.25) 50%, rgba(255, 255, 255, 0) 100%), #ffffff;">
+  <div class="container pt-4 pb-5">
+    <!-- Pill Badge -->
+    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-4" style="background: #e6f4f1; border: 1px solid #b2e2d8; color: #008766; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">
+      <i class="fas fa-graduation-cap"></i> NEXT-GEN UNIVERSITY PROJECT & RESEARCH SUITE
+    </div>
+
+    <!-- Main Headline -->
+    <h1 class="display-4 fw-bold text-dark mb-3" style="letter-spacing: -0.03em; color: #0f2427;">
+      Seamless solutions for <br class="d-none d-sm-inline">
+      <span style="color: #008766; font-style: italic; font-family: Georgia, serif;">your academic growth</span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="lead text-secondary mx-auto mb-4" style="max-width: 680px; font-size: 1.15rem; line-height: 1.6;">
+      Empower student engineering teams, faculty supervisors, and departmental deans with centralized milestone tracking, IEEE deliverable vaults, source code reviews, and certified 5-criteria rubric evaluation.
+    </p>
+
+    <!-- Dual CTAs -->
+    <div class="d-flex flex-wrap justify-content-center gap-3 mb-5">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-primary-ph btn-lg px-4 py-3 d-flex align-items-center gap-2">
+        Launch Academic Workspace <i class="fas fa-arrow-right"></i>
+      </a>
+      <button class="btn btn-outline-ph btn-lg px-4 py-3 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+        <i class="fas fa-play text-muted"></i> Watch Academic Tour
+      </button>
+    </div>
+
+    <!-- Hero Showcase Card (Exact Layout from Image) -->
+    <div class="mx-auto" style="max-width: 860px;">
+      <div class="card border-0 rounded-4 p-5 text-center position-relative overflow-hidden" style="background: #ffffff; border: 1px solid rgba(226, 232, 240, 0.9) !important; box-shadow: 0 25px 60px -15px rgba(15, 36, 39, 0.08);">
+        <div class="d-flex flex-column align-items-center position-relative" style="z-index: 2;">
+          <!-- Animated Pulsing Play Button -->
+          <button class="rounded-circle border-0 d-flex align-items-center justify-content-center mb-4 text-white" style="width: 64px; height: 64px; background: #008766; box-shadow: 0 8px 25px rgba(0, 135, 102, 0.35);" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+            <i class="fas fa-play fa-lg ms-1"></i>
+          </button>
+
+          <h3 class="fw-bold mb-2" style="color: #0f2427;">Watch our Academic Workflow Tour</h3>
+          <p class="text-muted small mx-auto mb-4" style="max-width: 420px;">
+            Discover how university departments evaluate capstone projects, verify code commits, and publish rubrics in less than 2 minutes.
+          </p>
+
+          <div class="w-100 pt-4 border-top d-flex flex-wrap justify-content-center gap-2">
+            <span class="text-muted small align-self-center me-2">1-Click Test Personas:</span>
+            <form action="{{ url_for('auth.login') }}" method="POST" class="d-inline-flex flex-wrap gap-2">
+              <button type="submit" name="demo_role" value="student_leader" class="btn btn-sm btn-light rounded-pill px-3 py-1 fw-semibold text-secondary">
+                🎓 Student Leader (Aarav Sharma · CSE)
+              </button>
+              <button type="submit" name="demo_role" value="faculty" class="btn btn-sm btn-light rounded-pill px-3 py-1 fw-semibold text-secondary">
+                👨‍🏫 Faculty Guide (Prof. Arvind Verma)
+              </button>
+              <button type="submit" name="demo_role" value="admin" class="btn btn-sm btn-light rounded-pill px-3 py-1 fw-semibold text-secondary">
+                🛡️ Department Dean (Dr. Rajesh Mehta)
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Metrics Counter Section -->
+<section class="py-4 border-top border-bottom" style="background: #f8fafc;">
+  <div class="container">
+    <div class="row text-center g-4">
+      <div class="col-6 col-md-3">
+        <div class="fs-2 fw-bold" style="color: #0f2427;">{{ total_projects }}+</div>
+        <div class="text-muted small text-uppercase fw-semibold">Projects Managed</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="fs-2 fw-bold" style="color: #008766;">{{ total_students }}+</div>
+        <div class="text-muted small text-uppercase fw-semibold">Active Students</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="fs-2 fw-bold" style="color: #0f2427;">{{ total_faculty }}+</div>
+        <div class="text-muted small text-uppercase fw-semibold">Faculty Guides</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="fs-2 fw-bold" style="color: #008766;">100%</div>
+        <div class="text-muted small text-uppercase fw-semibold">Digital Rubric Audit</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Key Capabilities Section -->
+<section class="py-5 bg-white">
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <span class="badge px-3 py-2 rounded-pill fw-bold text-uppercase" style="background: #e6f4f1; color: #008766; border: 1px solid #b2e2d8;">KEY CAPABILITIES</span>
+      <h2 class="font-heading fs-1 mt-2" style="color: #0f2427;">Engineered for High-Performance Academic Collaboration</h2>
+      <p class="text-muted">Centralize team formation, code repositories, milestone progress, and rubric grading.</p>
+<!-- SECTION 1: OUR SOLUTION — PROJECTHUB (FROM SLIDE 3) -->
+<section class="py-5 border-top border-bottom" style="background: #fbfdfc;">
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <span class="badge px-3 py-2 rounded-pill fw-bold text-uppercase" style="background: #e6f4f1; color: #008766; border: 1px solid #b2e2d8;">
+        <i class="fas fa-sparkles me-1"></i> OUR COMPREHENSIVE SOLUTION
+      </span>
+      <h2 class="font-heading fs-1 mt-2" style="color: #0f2427;">Our Solution — ProjectHub</h2>
+      <p class="text-muted">A Single Unified Platform for Student Project Collaboration & Management</p>
+    </div>
+
+    <div class="row g-4 align-items-center">
+      <!-- Left: Architecture Diagram Card -->
+      <div class="col-lg-4">
+        <div class="card border-0 rounded-4 p-4 text-center shadow-sm" style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+          <div class="rounded-3 d-inline-flex align-items-center justify-content-center text-white mx-auto mb-3" style="width: 54px; height: 54px; background: #008766;">
+            <i class="fas fa-code fa-lg"></i>
+          </div>
+          <h4 class="fw-bold mb-1" style="color: #0f2427;">PROJECT<span style="color: #008766;">HUB</span></h4>
+          <small class="text-muted text-uppercase fw-semibold d-block mb-3">COLLABORATE · CREATE · ACHIEVE</small>
+          
+          <div class="row g-2 mb-3">
+            <div class="col-4"><div class="p-2 rounded-3 bg-light text-center small fw-bold">🎓 Student</div></div>
+            <div class="col-4"><div class="p-2 rounded-3 bg-light text-center small fw-bold">👨‍🏫 Faculty</div></div>
+            <div class="col-4"><div class="p-2 rounded-3 bg-light text-center small fw-bold">🛡️ Admin</div></div>
+          </div>
+
+          <div class="p-3 rounded-3 text-start small" style="background: #e6f4f1; border: 1px solid #b2e2d8; color: #008766;">
+            <div class="fw-bold mb-2 text-uppercase" style="font-size: 0.72rem;">Centralized Workspace Features</div>
+            <div class="row g-1 text-secondary" style="font-size: 0.75rem;">
+              <div class="col-6"><i class="fas fa-code me-1" style="color: #008766;"></i> Code Collab</div>
+              <div class="col-6"><i class="fas fa-folder me-1" style="color: #008766;"></i> File Vault</div>
+              <div class="col-6"><i class="fas fa-users me-1" style="color: #008766;"></i> Team Work</div>
+              <div class="col-6"><i class="fas fa-comments me-1" style="color: #008766;"></i> Guide Chat</div>
+              <div class="col-6"><i class="fas fa-chart-line me-1" style="color: #008766;"></i> Progress</div>
+              <div class="col-6"><i class="fas fa-bell me-1" style="color: #008766;"></i> Alerts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle: 6 Key Benefits Checklist -->
+      <div class="col-lg-5">
+        <div class="card border-0 rounded-4 p-4 shadow-sm" style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+          <h4 class="fw-bold mb-3" style="color: #0f2427;"><i class="fas fa-check-shield text-success me-2"></i> Key Benefits :</h4>
+          <div class="d-flex flex-column gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <i class="fas fa-check-circle fa-lg" style="color: #008766;"></i>
+              <div><strong class="text-dark">One Centralized Platform</strong><div class="text-muted small">No more fragmented emails, paper logbooks, and separate chats.</div></div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <i class="fas fa-check-circle fa-lg" style="color: #008766;"></i>
+              <div><strong class="text-dark">Real-Time Collaboration</strong><div class="text-muted small">Live milestone sync and instant team-supervisor communication.</div></div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <i class="fas fa-check-circle fa-lg" style="color: #008766;"></i>
+              <div><strong class="text-dark">Online Code Sharing</strong><div class="text-muted small">Syntax-highlighted repository viewer with commit logs.</div></div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <i class="fas fa-check-circle fa-lg" style="color: #008766;"></i>
+              <div><strong class="text-dark">Faculty Monitoring</strong><div class="text-muted small">Direct supervisor visibility into weekly progress.</div></div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <i class="fas fa-check-circle fa-lg" style="color: #008766;"></i>
+              <div><strong class="text-dark">Secure File Storage</strong><div class="text-muted small">Categorized vault for IEEE SRS, diagrams, and dissertation PDFs.</div></div>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+              <i class="fas fa-check-circle fa-lg" style="color: #008766;"></i>
+              <div><strong class="text-dark">Easy Project Evaluation</strong><div class="text-muted small">Standardized 5-criteria rubric scoring (/100) with automatic grades.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Value Proposition Oval Box -->
+      <div class="col-lg-3">
+        <div class="p-4 text-white text-center rounded-4 d-flex flex-column justify-content-center align-items-center shadow-sm" style="background: linear-gradient(135deg, #008766, #0b1f28); min-height: 340px;">
+          <i class="fas fa-graduation-cap fa-3x mb-3 text-white-50"></i>
+          <h5 class="fw-bold text-white mb-2"><span style="color: #b2e2d8;">ProjectHub</span> brings Students, Faculty, and Admin onto a single centralized platform.</h5>
+          <small class="text-white-50 mb-4">Eliminating lost attachments and standardizing academic engineering audits.</small>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-sm rounded-pill px-4 fw-bold" style="color: #008766;">Explore Now</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2: SYSTEM USERS & RESPONSIBILITIES (FROM SLIDE 1) -->
+<section class="py-5 bg-white">
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <span class="badge px-3 py-2 rounded-pill fw-bold text-uppercase" style="background: #e6f4f1; color: #008766; border: 1px solid #b2e2d8;">
+        <i class="fas fa-users me-1"></i> ROLES & RESPONSIBILITIES MATRIX
+      </span>
+      <h2 class="font-heading fs-1 mt-2" style="color: #0f2427;">System Users & Responsibilities</h2>
+      <p class="text-muted">Structured accountability across every phase of the capstone lifecycle.</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- 1. Student Card -->
+      <div class="col-lg-4">
+        <div class="ph-card p-4 h-100 position-relative overflow-hidden">
+          <div class="position-absolute top-0 start-0 end-0" style="height: 4px; background: #008766;"></div>
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="fs-2">🎓</div>
+            <div>
+              <h4 class="font-heading fs-4 mb-0" style="color: #0f2427;">Student</h4>
+              <small class="text-muted">Engineering Candidate</small>
+            </div>
+          </div>
+          <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-4">
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Register & Login</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Create Team Project</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Add Team Members (2–4)</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Select Faculty Guide</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Upload Files</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Collaborate on Code</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Submit Final Project</li>
+          </ul>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-ph w-100 btn-sm">Enter Student Portal →</a>
+        </div>
+      </div>
+
+      <!-- 2. Faculty Card -->
+      <div class="col-lg-4">
+        <div class="ph-card p-4 h-100 position-relative overflow-hidden">
+          <div class="position-absolute top-0 start-0 end-0" style="height: 4px; background: #008766;"></div>
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="fs-2">👨‍🏫</div>
+            <div>
+              <h4 class="font-heading fs-4 mb-0" style="color: #0f2427;">Faculty</h4>
+              <small class="text-muted">Project Supervisor</small>
+            </div>
+          </div>
+          <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-4">
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Login</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Accept/Reject Guide Request</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Monitor Project Progress</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Give Feedback</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Evaluate Project</li>
+          </ul>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-ph w-100 btn-sm">Open Guide Hub →</a>
+        </div>
+      </div>
+
+      <!-- 3. Admin Card -->
+      <div class="col-lg-4">
+        <div class="ph-card p-4 h-100 position-relative overflow-hidden">
+          <div class="position-absolute top-0 start-0 end-0" style="height: 4px; background: #008766;"></div>
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="fs-2">🛡️</div>
+            <div>
+              <h4 class="font-heading fs-4 mb-0" style="color: #0f2427;">Admin</h4>
+              <small class="text-muted">Department Head / Dean</small>
+            </div>
+          </div>
+          <ul class="list-unstyled small text-muted d-flex flex-column gap-2 mb-4">
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Login</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Approve Student Registration</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Manage Students & Faculty</li>
+            <li><i class="fas fa-check-circle me-2" style="color: #008766;"></i> Monitor All Projects</li>
+          </ul>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-ph w-100 btn-sm">Access Admin Console →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3: OVERALL WEBSITE WORKFLOW (FROM SLIDE 2) -->
+<section class="py-5 border-top" style="background: #f8fafc;">
+  <div class="container py-4">
+    <div class="text-center mb-5">
+      <span class="badge px-3 py-2 rounded-pill fw-bold text-uppercase" style="background: #e6f4f1; color: #008766; border: 1px solid #b2e2d8;">
+        <i class="fas fa-project-diagram me-1"></i> END-TO-END WORKFLOW
+      </span>
+      <h2 class="font-heading fs-1 mt-2" style="color: #0f2427;">Overall Website Workflow</h2>
+      <p class="text-muted">Complete Flow of the ProjectHub System from Registration to Rubric Certification</p>
+    </div>
+
+    <div class="card border-0 rounded-4 p-5 shadow-sm" style="background: #ffffff; border: 1px solid #e2e8f0 !important;">
+      <!-- Step 1: Authentication Node -->
+      <div class="text-center mb-4">
+        <span class="badge px-4 py-3 rounded-3 fw-bold fs-6" style="background: #008766; color: white;">
+          <i class="fas fa-shield-alt me-1"></i> 🔐 Authentication (Register / Login / Password Reset)
+        </span>
+      </div>
+
+      <!-- Step 2: 3 Dashboards -->
+      <div class="row g-3 mb-4 text-center">
+        <div class="col-md-4"><div class="p-3 bg-light rounded-3 fw-bold small">🎓 Student Dashboard</div></div>
+        <div class="col-md-4"><div class="p-3 bg-light rounded-3 fw-bold small">👨‍🏫 Faculty Dashboard</div></div>
+        <div class="col-md-4"><div class="p-3 bg-light rounded-3 fw-bold small">🛡️ Admin Dashboard</div></div>
+      </div>
+
+      <!-- Step 3: Workspace & User Management -->
+      <div class="row g-3 mb-4 justify-content-center text-center">
+        <div class="col-md-4"><div class="p-2 rounded-3 fw-bold small" style="background: #e6f4f1; color: #008766; border: 1px solid #b2e2d8;">📁 Project Workspace</div></div>
+        <div class="col-md-4"><div class="p-2 rounded-3 fw-bold small bg-light">👥 User Management</div></div>
+      </div>
+
+      <!-- Step 4: Core Features Grid + Pipeline Stages -->
+      <div class="row g-4 align-items-center">
+        <div class="col-lg-7">
+          <div class="p-4 rounded-3 bg-light">
+            <h6 class="fw-bold mb-3 text-uppercase" style="color: #008766; font-size: 0.8rem;">⚡ Core Features</h6>
+            <div class="row g-2 small">
+              <div class="col-6"><i class="fas fa-code text-success me-2"></i> Code Collaboration</div>
+              <div class="col-6"><i class="fas fa-folder text-success me-2"></i> File Management</div>
+              <div class="col-6"><i class="fas fa-users text-success me-2"></i> Team Collaboration</div>
+              <div class="col-6"><i class="fas fa-comment-dots text-success me-2"></i> Faculty Feedback</div>
+              <div class="col-6"><i class="fas fa-bell text-success me-2"></i> Notifications</div>
+              <div class="col-6"><i class="fas fa-chart-line text-success me-2"></i> Progress Tracking</div>
+              <div class="col-6"><i class="fas fa-calendar-check text-success me-2"></i> Milestones & Deadlines</div>
+              <div class="col-6"><i class="fas fa-robot text-success me-2"></i> AI Code Review</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-5">
+          <div class="d-flex flex-column gap-3">
+            <div class="p-3 rounded-3 bg-white border d-flex align-items-center gap-3">
+              <span class="fs-4">📤</span>
+              <div><strong class="text-dark small">Final Project Submission</strong><div class="text-muted" style="font-size: 0.75rem;">Deliverables vault & thesis dissertation</div></div>
+            </div>
+            <div class="p-3 rounded-3 bg-white border d-flex align-items-center gap-3">
+              <span class="fs-4">⭐</span>
+              <div><strong class="text-dark small">Faculty Evaluation</strong><div class="text-muted" style="font-size: 0.75rem;">5-Criteria rubric scoring (/100)</div></div>
+            </div>
+            <div class="p-3 rounded-3 text-white d-flex align-items-center gap-3" style="background: #008766;">
+              <span class="fs-4">🎓</span>
+              <div><strong class="text-white small">Project Successfully Completed</strong><div class="text-white-50" style="font-size: 0.75rem;">Certified Letter Grade (A+) & digital audit</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action Banner -->
+<section class="py-5 text-white" style="background: #0b1f28;">
+  <div class="container py-4 text-center">
+    <h2 class="font-heading fs-1 text-white mb-3">Scale Your Academic Workflows with ProjectHub</h2>
+    <p class="text-white-50 mx-auto mb-4" style="max-width: 600px;">
+      Join thousands of engineering students and faculty guides streamlining academic collaboration.
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-primary-ph btn-lg px-4">
+        Launch Live Workspace Now
+      </a>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+        Student Registration
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

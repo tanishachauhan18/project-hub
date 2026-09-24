@@ -1,0 +1,100 @@
+<!-- AI Project Assistant Modal -->
+<div class="modal fade" id="aiAssistantModal" tabindex="-1" aria-labelledby="aiAssistantModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-navy text-white" style="background: linear-gradient(135deg, #0b132b, #1c2541);">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div>
+            <h5 class="modal-title font-heading mb-0 text-white" id="aiAssistantModalLabel">ProjectHub AI Assistant</h5>
+            <small class="text-white-50" style="font-size: 0.75rem;">Future-Ready AI Engine for Academic Project Acceleration</small>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4 bg-light">
+        <ul class="nav nav-pills nav-fill mb-3 bg-white p-1 rounded-3 border" id="aiPillsTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active py-2 fw-semibold" id="pills-ideas-tab" data-bs-toggle="pill" data-bs-target="#pills-ideas" type="button" role="tab"><i class="fas fa-lightbulb me-1"></i> Idea Generator</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link py-2 fw-semibold" id="pills-code-tab" data-bs-toggle="pill" data-bs-target="#pills-code" type="button" role="tab"><i class="fas fa-code me-1"></i> Code Auditor</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link py-2 fw-semibold" id="pills-roadmap-tab" data-bs-toggle="pill" data-bs-target="#pills-roadmap" type="button" role="tab"><i class="fas fa-tasks me-1"></i> Milestone Planner</button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="aiPillsTabContent">
+          <!-- 1. Idea Generator -->
+          <div class="tab-pane fade show active" id="pills-ideas" role="tabpanel">
+            <div class="card border-0 shadow-sm p-3 mb-3">
+              <label class="form-label fw-bold small text-muted">Select Academic Domain</label>
+              <div class="input-group">
+                <select id="aiDomainSelect" class="form-select">
+                  <option value="Web SaaS">Web SaaS & Distributed Cloud</option>
+                  <option value="AI/ML">Artificial Intelligence & Deep Learning</option>
+                  <option value="IoT & Embedded">IoT, Edge Computing & Smart Systems</option>
+                  <option value="Cybersecurity">Cybersecurity, Cryptography & Zero Trust</option>
+                </select>
+                <button id="aiGenerateIdeasBtn" class="btn btn-primary px-4 fw-semibold" onclick="generateAIIdeas()">
+                  <i class="fas fa-magic me-2"></i>Generate Novel Ideas
+                </button>
+              </div>
+            </div>
+            <div id="aiIdeasOutput">
+              <div class="text-center py-4 text-muted small">
+                <i class="fas fa-sparkles fa-2x mb-2 text-primary"></i>
+                <p>Click "Generate Novel Ideas" to discover research-backed project titles, abstracts, and stacks.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Code Review -->
+          <div class="tab-pane fade" id="pills-code" role="tabpanel">
+            <div class="card border-0 shadow-sm p-3">
+              <label class="form-label fw-bold small text-muted">Paste Code Snippet for AI Security & Quality Audit</label>
+              <textarea id="aiCodeInput" class="form-control font-monospace mb-3" rows="6" placeholder="def process_data(query):&#10;    # Paste python, js or sql code here..."></textarea>
+              <div class="d-flex justify-content-end">
+                <button id="aiRunReviewBtn" class="btn btn-primary fw-semibold" onclick="runAICodeReview()">
+                  <i class="fas fa-shield-alt me-2"></i>Run AI Security & Quality Audit
+                </button>
+              </div>
+            </div>
+            <div id="aiReviewOutput"></div>
+          </div>
+
+          <!-- 3. Milestone Planner -->
+          <div class="tab-pane fade" id="pills-roadmap" role="tabpanel">
+            <div class="card border-0 shadow-sm p-3">
+              <p class="small text-muted mb-2">Automated IEEE Standard 4-Phase Roadmap for Senior Design Projects:</p>
+              <div class="list-group list-group-flush small">
+                <div class="list-group-item px-0 py-2">
+                  <strong class="text-navy">Phase 1: Research, Literature Survey & SRS (Weeks 1-3)</strong>
+                  <div class="text-muted">Domain problem formulation, requirement elicitation, and faculty guide SRS approval.</div>
+                </div>
+                <div class="list-group-item px-0 py-2">
+                  <strong class="text-navy">Phase 2: System Design & Schema Architecture (Weeks 4-6)</strong>
+                  <div class="text-muted">High-fidelity UI mockups, database normalisation, component interfaces, and API contracts.</div>
+                </div>
+                <div class="list-group-item px-0 py-2">
+                  <strong class="text-navy">Phase 3: Core Implementation & API Modules (Weeks 7-12)</strong>
+                  <div class="text-muted">Backend microservices, frontend integration, authentication, and mid-term demo sign-off.</div>
+                </div>
+                <div class="list-group-item px-0 py-2">
+                  <strong class="text-navy">Phase 4: Testing, Cloud Deployment & Final Viva Defense (Weeks 13-15)</strong>
+                  <div class="text-muted">Automated unit test coverage, load benchmarking, IEEE format thesis, and final rubric evaluation.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-white border-top">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Rubric Evaluation: {{ project.title }} – ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="font-heading mb-1">Academic Project Rubric Evaluation</h2>
+    <p class="text-muted small mb-0">Grade <strong>{{ project.title }}</strong> across standardized 5-criteria rubric matrix.</p>
+  </div>
+  <a href="{{ url_for('faculty.workspace', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+    <i class="fas fa-arrow-left me-1"></i> Back to Workspace
+  </a>
+</div>
+
+<div class="row g-4 justify-content-center">
+  <div class="col-lg-10">
+    <div class="ph-card p-4 p-md-5 bg-white shadow-sm rounded-4">
+      
+      <!-- Project Metadata Strip -->
+      <div class="p-3 bg-light rounded-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+          <span class="badge bg-primary me-2">{{ project.domain }}</span>
+          <strong class="text-navy">{{ project.title }}</strong>
+          <div class="small text-muted mt-1">Lead: <strong>{{ project.creator.full_name }}</strong> · {{ project.members | length }} Team Members</div>
+        </div>
+        <div class="text-end">
+          <span class="badge-status badge-{{ project.status }}">{{ project.status.replace('_', ' ') }}</span>
+        </div>
+      </div>
+
+      <form method="POST" action="{{ url_for('faculty.evaluate', project_id=project.id) }}" id="rubricEvaluationForm">
+        
+        <h5 class="font-heading mb-3 text-navy"><i class="fas fa-list-ol text-primary me-2"></i>5-Criteria Assessment Breakdown (20 Marks Each)</h5>
+
+        <div class="row g-4 mb-4">
+          <!-- 1. Presentation -->
+          <div class="col-md-6">
+            <div class="p-3 border rounded-3 bg-white h-100 shadow-sm">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label fw-bold text-navy mb-0">1. Presentation & Communication</label>
+                <span class="badge bg-primary-subtle text-primary">Max 20</span>
+              </div>
+              <p class="small text-muted mb-2">Slide deck structure, team coordination, time management, and clarity of defense delivery.</p>
+              <div class="input-group">
+                <input type="number" name="marks_presentation" id="marks_pres" class="form-control rubric-input" min="0" max="20" value="{{ evaluation.marks_presentation if evaluation else 18 }}" required>
+                <span class="input-group-text">/ 20</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Code Quality -->
+          <div class="col-md-6">
+            <div class="p-3 border rounded-3 bg-white h-100 shadow-sm">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label fw-bold text-navy mb-0">2. Code Quality & Architecture</label>
+                <span class="badge bg-primary-subtle text-primary">Max 20</span>
+              </div>
+              <p class="small text-muted mb-2">Code modularity, design patterns, containerization, error handling, and test coverage.</p>
+              <div class="input-group">
+                <input type="number" name="marks_code_quality" id="marks_code" class="form-control rubric-input" min="0" max="20" value="{{ evaluation.marks_code_quality if evaluation else 19 }}" required>
+                <span class="input-group-text">/ 20</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Documentation -->
+          <div class="col-md-6">
+            <div class="p-3 border rounded-3 bg-white h-100 shadow-sm">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label fw-bold text-navy mb-0">3. Documentation & SRS Quality</label>
+                <span class="badge bg-primary-subtle text-primary">Max 20</span>
+              </div>
+              <p class="small text-muted mb-2">IEEE format compliance, UML sequence/class diagrams, database normalisation, and thesis completeness.</p>
+              <div class="input-group">
+                <input type="number" name="marks_documentation" id="marks_doc" class="form-control rubric-input" min="0" max="20" value="{{ evaluation.marks_documentation if evaluation else 19 }}" required>
+                <span class="input-group-text">/ 20</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Viva -->
+          <div class="col-md-6">
+            <div class="p-3 border rounded-3 bg-white h-100 shadow-sm">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label fw-bold text-navy mb-0">4. Technical Viva & Q&A</label>
+                <span class="badge bg-primary-subtle text-primary">Max 20</span>
+              </div>
+              <p class="small text-muted mb-2">Individual student understanding of algorithms, database queries, edge case handling, and core theory.</p>
+              <div class="input-group">
+                <input type="number" name="marks_viva" id="marks_viva" class="form-control rubric-input" min="0" max="20" value="{{ evaluation.marks_viva if evaluation else 18 }}" required>
+                <span class="input-group-text">/ 20</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Innovation -->
+          <div class="col-md-12">
+            <div class="p-3 border rounded-3 bg-white shadow-sm">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label class="form-label fw-bold text-navy mb-0">5. Innovation, Complexity & Real-world Relevance</label>
+                <span class="badge bg-primary-subtle text-primary">Max 20</span>
+              </div>
+              <p class="small text-muted mb-2">Problem novelty, societal impact, performance scalability, and publication readiness.</p>
+              <div class="input-group" style="max-width: 300px;">
+                <input type="number" name="marks_innovation" id="marks_innov" class="form-control rubric-input" min="0" max="20" value="{{ evaluation.marks_innovation if evaluation else 19 }}" required>
+                <span class="input-group-text">/ 20</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Score & Grade Banner -->
+        <div class="p-4 rounded-4 text-white mb-4 shadow-sm" style="background: linear-gradient(135deg, #0b132b, #1c2541);">
+          <div class="row align-items-center text-center text-md-start g-3">
+            <div class="col-md-6">
+              <small class="text-white-50 text-uppercase fw-bold">Computed Total Score</small>
+              <div class="display-5 fw-bold text-white"><span id="liveTotalMarks">93</span> <span class="fs-5 text-white-50">/ 100</span></div>
+            </div>
+            <div class="col-md-6 text-md-end">
+              <small class="text-white-50 text-uppercase fw-bold">Assigned Grade</small>
+              <div class="display-6 fw-bold text-warning" id="liveGradeBadge">Grade A+</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verdict & Remarks -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Final Evaluation Verdict <span class="text-danger">*</span></label>
+            <select name="final_verdict" class="form-select" required>
+              <option value="Approved" {% if not evaluation or evaluation.final_verdict == 'Approved' %}selected{% endif %}>Approved (Official Sign-off)</option>
+              <option value="Revision Required" {% if evaluation and evaluation.final_verdict == 'Revision Required' %}selected{% endif %}>Revision Required (Resubmit Deliverables)</option>
+              <option value="Rejected" {% if evaluation and evaluation.final_verdict == 'Rejected' %}selected{% endif %}>Rejected (Unsatisfactory Defense)</option>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label fw-semibold small">Faculty Evaluator Remarks & Recommendations</label>
+            <textarea name="remarks" class="form-control" rows="4" placeholder="Detailed feedback on project strengths, code quality, and conference publication recommendations...">{{ evaluation.remarks if evaluation else 'Exceptional project execution. Architecture and deliverables satisfy departmental senior design requirements.' }}</textarea>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{{ url_for('faculty.workspace', project_id=project.id) }}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary-ph px-4">
+            <i class="fas fa-award me-2"></i> Save & Publish Official Evaluation
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  function calculateScore() {
+    const p = parseInt(document.getElementById('marks_pres').value) || 0;
+    const c = parseInt(document.getElementById('marks_code').value) || 0;
+    const d = parseInt(document.getElementById('marks_doc').value) || 0;
+    const v = parseInt(document.getElementById('marks_viva').value) || 0;
+    const i = parseInt(document.getElementById('marks_innov').value) || 0;
+
+    const total = p + c + d + v + i;
+    document.getElementById('liveTotalMarks').innerText = total;
+
+    let grade = 'F';
+    if (total >= 90) grade = 'Grade A+';
+    else if (total >= 80) grade = 'Grade A';
+    else if (total >= 70) grade = 'Grade B';
+    else if (total >= 60) grade = 'Grade C';
+    else if (total >= 50) grade = 'Grade D';
+    else grade = 'Grade F';
+
+    document.getElementById('liveGradeBadge').innerText = grade;
+  }
+
+  document.querySelectorAll('.rubric-input').forEach(input => {
+    input.addEventListener('input', calculateScore);
+  });
+  calculateScore();
+</script>
+{% endblock %}

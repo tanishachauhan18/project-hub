@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Student Registration Approvals – Admin | ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+  <div>
+    <h2 class="font-heading mb-1">Student Registration Approval Queue</h2>
+    <p class="text-muted small mb-0">Verify student identities, roll numbers, and grant access to project workspaces.</p>
+  </div>
+  {% if pending_students %}
+    <form action="{{ url_for('admin.bulk_approve') }}" method="POST">
+      <button type="submit" class="btn btn-success btn-sm">
+        <i class="fas fa-check-double me-1"></i> Approve All ({{ pending_students | length }})
+      </button>
+    </form>
+  {% endif %}
+</div>
+
+<div class="ph-card bg-white shadow-sm overflow-hidden">
+  <div class="table-responsive">
+    <table class="ph-table">
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>Roll Number</th>
+          <th>Department</th>
+          <th>Email Address</th>
+          <th>Contact Phone</th>
+          <th>Registration Date</th>
+          <th class="text-end">Verification Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if pending_students %}
+          {% for student in pending_students %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="user-avatar-circle" style="width: 34px; height: 34px; font-size: 0.85rem;">{{ student.full_name[0] }}</div>
+                  <strong>{{ student.full_name }}</strong>
+                </div>
+              </td>
+              <td><code>{{ student.roll_or_faculty_id or 'N/A' }}</code></td>
+              <td>{{ student.department }}</td>
+              <td>{{ student.email }}</td>
+              <td class="text-muted small">{{ student.phone or 'N/A' }}</td>
+              <td class="text-muted small">{{ student.created_at.strftime('%b %d, %Y') }}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-2">
+                  <form action="{{ url_for('admin.handle_approval', user_id=student.id, action='reject') }}" method="POST">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Reject and delete this registration?');">
+                      <i class="fas fa-times me-1"></i> Reject
+                    </button>
+                  </form>
+                  <form action="{{ url_for('admin.handle_approval', user_id=student.id, action='approve') }}" method="POST">
+                    <button type="submit" class="btn btn-sm btn-success px-3">
+                      <i class="fas fa-check me-1"></i> Approve & Activate
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="7" class="text-center py-5 text-muted">
+              <i class="fas fa-user-check text-success fa-3x mb-2 d-block"></i>
+              No registrations pending approval! All students are currently verified.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

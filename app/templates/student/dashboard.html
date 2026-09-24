@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard – ProjectHub{% endblock %}
+
+{% block content %}
+<!-- Top Welcome Banner -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+  <div>
+    <h2 class="font-heading mb-1">Hello, {{ user.full_name }}! 👋</h2>
+    <p class="text-muted small mb-0">Track your academic projects, collaborate with team members, and check faculty guide feedback.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+      <i class="fas fa-sparkles text-primary"></i>
+      <span>AI Project Assistant</span>
+    </button>
+    <a href="{{ url_for('student.create_project') }}" class="btn btn-primary-ph btn-sm">
+      <i class="fas fa-plus me-1"></i> New Project
+    </a>
+  </div>
+</div>
+
+<!-- KPI Stats Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="fas fa-folder-open"></i></div>
+      <div>
+        <div class="stat-value">{{ total_projects }}</div>
+        <div class="stat-label">Enrolled Projects</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon amber"><i class="fas fa-spinner"></i></div>
+      <div>
+        <div class="stat-value">{{ in_progress_count }}</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon emerald"><i class="fas fa-check-circle"></i></div>
+      <div>
+        <div class="stat-value">{{ completed_count }}</div>
+        <div class="stat-label">Evaluated / Done</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="fas fa-tasks"></i></div>
+      <div>
+        <div class="stat-value">{{ upcoming_milestones | length }}</div>
+        <div class="stat-label">Pending Milestones</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Active Project Workspace Spotlight -->
+{% if active_project %}
+<div class="workspace-header mb-4">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-8">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge bg-primary px-3 py-1">{{ active_project.domain }}</span>
+        <span class="badge-status badge-{{ active_project.status }}">{{ active_project.status.replace('_', ' ') }}</span>
+      </div>
+      <h3 class="workspace-title">{{ active_project.title }}</h3>
+      <p class="text-white-50 small mb-3">{{ active_project.abstract | truncate(160) }}</p>
+
+      <div class="workspace-meta">
+        <div class="workspace-meta-item">
+          <i class="fas fa-chalkboard-teacher"></i>
+          <span>Guide: <strong>{{ active_project.faculty_guide.full_name if active_project.faculty_guide else 'Pending Assignment' }}</strong></span>
+        </div>
+        <div class="workspace-meta-item">
+          <i class="fas fa-users"></i>
+          <span>Team: <strong>{{ active_project.members | length }} Members</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 text-lg-end">
+      <div class="p-3 rounded-3 bg-white bg-opacity-10 backdrop-blur mb-3 text-start">
+        <div class="d-flex justify-content-between text-white small fw-bold mb-1">
+          <span>Overall Project Progress</span>
+          <span>{{ active_project.progress_percent }}%</span>
+        </div>
+        <div class="ph-progress-container" style="background: rgba(255,255,255,0.2);">
+          <div class="ph-progress-bar" style="width: {{ active_project.progress_percent }}%;"></div>
+        </div>
+      </div>
+      <a href="{{ url_for('student.workspace', project_id=active_project.id) }}" class="btn btn-light fw-bold px-4 py-2">
+        <i class="fas fa-door-open me-2 text-primary"></i> Enter Project Workspace
+      </a>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="ph-card p-5 text-center bg-white mb-4 shadow-sm">
+  <div class="stat-icon blue mx-auto mb-3"><i class="fas fa-lightbulb"></i></div>
+  <h4 class="font-heading mb-2">You have no active projects</h4>
+  <p class="text-muted small mb-4">Form a team of 2–4 members and start your academic project journey.</p>
+  <a href="{{ url_for('student.create_project') }}" class="btn btn-primary-ph">
+    <i class="fas fa-plus me-1"></i> Create Your Project
+  </a>
+</div>
+{% endif %}
+
+<!-- Split Columns: Milestones & Recent Feedbacks -->
+<div class="row g-4">
+  <!-- Left Column: Upcoming Milestones -->
+  <div class="col-lg-6">
+    <div class="ph-card bg-white h-100 shadow-sm">
+      <div class="ph-card-header">
+        <h5 class="ph-card-title"><i class="fas fa-hourglass-half text-primary me-2"></i>Upcoming Milestones</h5>
+        <a href="{{ url_for('student.projects') }}" class="small text-decoration-none">View All</a>
+      </div>
+      <div class="ph-card-body p-0">
+        {% if upcoming_milestones %}
+          <div class="list-group list-group-flush">
+            {% for m in upcoming_milestones %}
+              <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-bold text-dark small mb-1">{{ m.title }}</div>
+                  <div class="text-muted" style="font-size: 0.75rem;">
+                    <i class="fas fa-calendar-alt me-1 text-primary"></i> Due: {{ m.due_date.strftime('%b %d, %Y') }} · 
+                    <span class="badge bg-secondary-subtle text-dark">Weight: {{ m.weight_percent }}%</span>
+                  </div>
+                </div>
+                <form action="{{ url_for('student.toggle_milestone', project_id=m.project_id, milestone_id=m.id) }}" method="POST">
+                  <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3" title="Mark Complete">
+                    <i class="fas fa-check me-1"></i> Mark Done
+                  </button>
+                </form>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="p-4 text-center text-muted small">
+            <i class="fas fa-clipboard-check text-success fa-2x mb-2 d-block"></i>
+            No pending milestones due right now.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Recent Faculty Feedbacks -->
+  <div class="col-lg-6">
+    <div class="ph-card bg-white h-100 shadow-sm">
+      <div class="ph-card-header">
+        <h5 class="ph-card-title"><i class="fas fa-comment-dots text-primary me-2"></i>Faculty Guide Remarks</h5>
+        <span class="badge bg-info-subtle text-info">Latest</span>
+      </div>
+      <div class="ph-card-body p-0">
+        {% if feedbacks %}
+          <div class="list-group list-group-flush">
+            {% for fb in feedbacks %}
+              <div class="list-group-item p-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="badge bg-primary-subtle text-primary">{{ fb.remarks_type }}</span>
+                  <div class="text-warning small">
+                    {% for _ in range(fb.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                  </div>
+                </div>
+                <p class="small text-dark mb-1">"{{ fb.feedback_text }}"</p>
+                <div class="text-muted" style="font-size: 0.72rem;">
+                  By <strong>{{ fb.faculty.full_name }}</strong> · {{ fb.created_at | timeago }}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="p-4 text-center text-muted small">
+            <i class="fas fa-comments text-muted fa-2x mb-2 d-block"></i>
+            No faculty feedback recorded yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

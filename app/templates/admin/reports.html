@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Reports & Analytics – Admin | ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+  <div>
+    <h2 class="font-heading mb-1">Academic Analytics & Evaluation Reports</h2>
+    <p class="text-muted small mb-0">Institutional assessment metrics, grade distributions, and faculty supervisor workload audits.</p>
+  </div>
+  <button class="btn btn-dark-ph btn-sm" onclick="window.print()">
+    <i class="fas fa-print me-1"></i> Print / Export Report PDF
+  </button>
+</div>
+
+<!-- Summary Metrics Strip -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="fas fa-project-diagram"></i></div>
+      <div>
+        <div class="stat-value">{{ total_projects }}</div>
+        <div class="stat-label">Total Projects</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon emerald"><i class="fas fa-check-double"></i></div>
+      <div>
+        <div class="stat-value">{{ completed }}</div>
+        <div class="stat-label">Evaluated / Certified</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon amber"><i class="fas fa-percentage"></i></div>
+      <div>
+        <div class="stat-value">{{ avg_score }} <span class="fs-6 text-muted">/ 100</span></div>
+        <div class="stat-label">Average Score</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div>
+        <div class="stat-value">{{ faculty_loads | length }}</div>
+        <div class="stat-label">Active Faculty Guides</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Grade Distribution & Domain Stats -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-7">
+    <div class="ph-card bg-white shadow-sm p-4 h-100">
+      <h5 class="font-heading mb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Official Grade Distribution (Rubric Assessment)</h5>
+      <div style="height: 250px; position: relative;">
+        <canvas id="reportsGradeChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="ph-card bg-white shadow-sm p-4 h-100">
+      <h5 class="font-heading mb-3"><i class="fas fa-layer-group text-primary me-2"></i>Domain Progress Analysis</h5>
+      <div class="table-responsive">
+        <table class="ph-table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Count</th>
+              <th>Avg Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for domain, count, avg_prog in domain_stats %}
+              <tr>
+                <td><strong>{{ domain }}</strong></td>
+                <td>{{ count }} Projects</td>
+                <td>
+                  <span class="badge bg-primary-subtle text-primary">{{ avg_prog | round(1) }}%</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Faculty Workload Audit Table -->
+<div class="ph-card bg-white shadow-sm overflow-hidden mb-4">
+  <div class="ph-card-header">
+    <h5 class="ph-card-title"><i class="fas fa-user-tie text-primary me-2"></i>Faculty Supervisor Workload Audit</h5>
+  </div>
+  <div class="p-0">
+    <div class="table-responsive">
+      <table class="ph-table">
+        <thead>
+          <tr>
+            <th>Faculty Guide</th>
+            <th>Department</th>
+            <th>Active Guided Projects</th>
+            <th>Evaluated Projects</th>
+            <th>Supervision Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for load in faculty_loads %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="user-avatar-circle" style="width: 32px; height: 32px; font-size: 0.85rem;">{{ load.faculty.full_name[0] }}</div>
+                  <strong>{{ load.faculty.full_name }}</strong>
+                </div>
+              </td>
+              <td>{{ load.faculty.department }}</td>
+              <td><span class="badge bg-primary-subtle text-primary">{{ load.guided_count }} Projects</span></td>
+              <td><span class="badge bg-success-subtle text-success">{{ load.completed_count }} Evaluated</span></td>
+              <td>
+                {% if load.guided_count > 3 %}
+                  <span class="badge bg-warning-subtle text-dark">High Capacity</span>
+                {% else %}
+                  <span class="badge bg-success-subtle text-success">Available for Guide</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const gradesData = {{ grades | tojson }};
+    initReportsChart(gradesData);
+  });
+</script>
+{% endblock %}

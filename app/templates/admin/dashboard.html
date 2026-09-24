@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard – ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+  <div>
+    <h2 class="font-heading mb-1">Academic Administration Console</h2>
+    <p class="text-muted small mb-0">System-wide metrics, student registration approvals, project supervision, and audit logs.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('admin.approvals') }}" class="btn btn-outline-warning btn-sm d-flex align-items-center gap-1">
+      <i class="fas fa-user-check"></i>
+      <span>Pending Approvals</span>
+      {% if pending_students %}<span class="badge bg-danger ms-1">{{ pending_students | length }}</span>{% endif %}
+    </a>
+    <a href="{{ url_for('admin.reports') }}" class="btn btn-primary-ph btn-sm">
+      <i class="fas fa-file-invoice me-1"></i> Generate Reports
+    </a>
+  </div>
+</div>
+
+<!-- KPI Metric Cards Row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="fas fa-user-graduate"></i></div>
+      <div>
+        <div class="stat-value">{{ approved_students }} <span class="fs-6 text-muted">/ {{ total_students }}</span></div>
+        <div class="stat-label">Approved Students</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon emerald"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div>
+        <div class="stat-value">{{ total_faculty }}</div>
+        <div class="stat-label">Faculty Supervisors</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="fas fa-project-diagram"></i></div>
+      <div>
+        <div class="stat-value">{{ total_projects }}</div>
+        <div class="stat-label">Academic Projects</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon amber"><i class="fas fa-award"></i></div>
+      <div>
+        <div class="stat-value">{{ completed_projects }}</div>
+        <div class="stat-label">Evaluated / Certified</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pending Approvals Banner -->
+{% if pending_students %}
+  <div class="ph-card bg-white shadow-sm border border-warning mb-4">
+    <div class="ph-card-header bg-warning-subtle">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fas fa-exclamation-triangle text-warning fs-5"></i>
+        <h5 class="ph-card-title text-dark">Action Required: {{ pending_students | length }} Student Registration(s) Pending Approval</h5>
+      </div>
+      <a href="{{ url_for('admin.approvals') }}" class="btn btn-sm btn-dark">Manage Approvals</a>
+    </div>
+    <div class="p-0">
+      <div class="table-responsive">
+        <table class="ph-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Roll Number</th>
+              <th>Department</th>
+              <th>Email</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in pending_students[:3] %}
+              <tr>
+                <td><strong>{{ s.full_name }}</strong></td>
+                <td><code>{{ s.roll_or_faculty_id or 'N/A' }}</code></td>
+                <td>{{ s.department }}</td>
+                <td>{{ s.email }}</td>
+                <td class="text-end">
+                  <form action="{{ url_for('admin.handle_approval', user_id=s.id, action='approve') }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-success px-3"><i class="fas fa-check me-1"></i> Approve</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- Visual Analytics Charts Row -->
+<div class="row g-4 mb-4">
+  <div class="col-lg-5">
+    <div class="ph-card bg-white shadow-sm p-4 h-100">
+      <h5 class="font-heading mb-3"><i class="fas fa-chart-pie text-primary me-2"></i>Projects by Academic Domain</h5>
+      <div style="height: 260px; position: relative;">
+        <canvas id="adminDomainChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="ph-card bg-white shadow-sm p-4 h-100">
+      <h5 class="font-heading mb-3"><i class="fas fa-chart-bar text-primary me-2"></i>Project Lifecycle Distribution</h5>
+      <div style="height: 260px; position: relative;">
+        <canvas id="adminStatusChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Master Projects & System Audit Logs Split -->
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="ph-card bg-white shadow-sm h-100">
+      <div class="ph-card-header">
+        <h5 class="ph-card-title"><i class="fas fa-project-diagram text-primary me-2"></i>Recent Master Projects</h5>
+        <a href="{{ url_for('admin.projects') }}" class="small text-decoration-none">View All</a>
+      </div>
+      <div class="p-0">
+        <div class="table-responsive">
+          <table class="ph-table">
+            <thead>
+              <tr>
+                <th>Title & Domain</th>
+                <th>Leader & Guide</th>
+                <th>Status</th>
+                <th>Progress</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in recent_projects %}
+                <tr>
+                  <td>
+                    <strong class="text-navy">{{ p.title }}</strong>
+                    <div class="small text-muted">{{ p.domain }}</div>
+                  </td>
+                  <td>
+                    <div class="small text-dark">{{ p.creator.full_name }}</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Guide: {{ p.faculty_guide.full_name if p.faculty_guide else 'None' }}</div>
+                  </td>
+                  <td><span class="badge-status badge-{{ p.status }}">{{ p.status.replace('_', ' ') }}</span></td>
+                  <td style="min-width: 100px;">
+                    <div class="small fw-bold text-primary mb-1">{{ p.progress_percent }}%</div>
+                    <div class="ph-progress-container"><div class="ph-progress-bar" style="width: {{ p.progress_percent }}%;"></div></div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="ph-card bg-white shadow-sm h-100">
+      <div class="ph-card-header">
+        <h5 class="ph-card-title"><i class="fas fa-history text-primary me-2"></i>System Activity Logs</h5>
+        <span class="badge bg-light text-muted">Audit Trail</span>
+      </div>
+      <div class="p-0">
+        <div class="list-group list-group-flush" style="max-height: 380px; overflow-y: auto;">
+          {% for log in recent_logs %}
+            <div class="list-group-item p-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong class="text-navy small">{{ log.action }}</strong>
+                <span class="text-muted" style="font-size: 0.7rem;">{{ log.timestamp | timeago }}</span>
+              </div>
+              <p class="text-muted small mb-0">{{ log.details }}</p>
+              <div class="text-muted" style="font-size: 0.68rem;">IP: {{ log.ip_address }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const domainLabels = {{ domain_labels | tojson }};
+    const domainCounts = {{ domain_counts | tojson }};
+    const statusDict = {{ status_dict | tojson }};
+    initAdminCharts(domainLabels, domainCounts, statusDict);
+  });
+</script>
+{% endblock %}

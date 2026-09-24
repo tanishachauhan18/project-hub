@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}User Profile – ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="font-heading mb-1">My Account & Profile</h2>
+    <p class="text-muted small mb-0">Manage personal academic details, professional bio, skills, and security credentials.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="ph-card p-4 bg-white text-center shadow-sm">
+      <div class="user-avatar-circle mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+        {{ user.full_name[0] }}
+      </div>
+      <h4 class="font-heading mb-1">{{ user.full_name }}</h4>
+      <span class="badge-status badge-{{ user.role }} mb-3">{{ user.role.title() }}</span>
+      
+      <div class="text-start small p-3 bg-light rounded-3 mb-3">
+        <div class="mb-2"><strong>Email:</strong> <span class="text-muted d-block">{{ user.email }}</span></div>
+        <div class="mb-2"><strong>ID Number:</strong> <span class="text-muted d-block">{{ user.roll_or_faculty_id or 'Not Assigned' }}</span></div>
+        <div class="mb-2"><strong>Department:</strong> <span class="text-muted d-block">{{ user.department }}</span></div>
+        <div><strong>Joined:</strong> <span class="text-muted d-block">{{ user.created_at.strftime('%b %d, %Y') }}</span></div>
+      </div>
+
+      <div class="text-start">
+        <label class="fw-bold small text-muted text-uppercase mb-2">Verified Skills & Tech Stack</label>
+        <div class="d-flex flex-wrap gap-1">
+          {% if user.skills %}
+            {% for skill in user.skills.split(',') %}
+              <span class="badge bg-primary-subtle text-primary">{{ skill.strip() }}</span>
+            {% endfor %}
+          {% else %}
+            <span class="text-muted small fst-italic">No skills listed yet.</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="ph-card p-4 p-md-5 bg-white shadow-sm">
+      <h4 class="font-heading mb-4">Edit Profile Information</h4>
+
+      <form method="POST" action="{{ url_for('auth.profile') }}">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Full Name</label>
+            <input type="text" name="full_name" class="form-control" value="{{ user.full_name }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Contact Phone</label>
+            <input type="tel" name="phone" class="form-control" value="{{ user.phone or '' }}" placeholder="+91 98765 00000">
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label fw-semibold small">Academic Department</label>
+            <select name="department" class="form-select">
+              <option value="Computer Science & Engineering" {% if user.department == 'Computer Science & Engineering' %}selected{% endif %}>Computer Science & Engineering</option>
+              <option value="Artificial Intelligence & Data Science" {% if user.department == 'Artificial Intelligence & Data Science' %}selected{% endif %}>Artificial Intelligence & Data Science</option>
+              <option value="Information Technology" {% if user.department == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+              <option value="Cyber Security & Networks" {% if user.department == 'Cyber Security & Networks' %}selected{% endif %}>Cyber Security & Networks</option>
+            </select>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label fw-semibold small">Bio / Academic Research Focus</label>
+            <textarea name="bio" class="form-control" rows="3" placeholder="Brief summary of your academic interests...">{{ user.bio or '' }}</textarea>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label fw-semibold small">Skills & Technologies (comma separated)</label>
+            <input type="text" name="skills" class="form-control" value="{{ user.skills or '' }}" placeholder="Python, React, Docker, SQL...">
+          </div>
+
+          <div class="col-12"><hr class="my-3"></div>
+
+          <div class="col-md-12">
+            <h6 class="font-heading mb-2">Change Password (Leave blank to keep unchanged)</h6>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">New Password</label>
+            <input type="password" name="new_password" class="form-control" placeholder="Enter new password">
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-4">
+          <button type="submit" class="btn btn-primary-ph px-4">
+            <i class="fas fa-save me-2"></i> Save Profile Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}About ProjectHub – Academic Collaboration Platform{% endblock %}
+
+{% block public_content %}
+<div class="container py-5">
+  <div class="row justify-content-center text-center mb-5">
+    <div class="col-lg-8">
+      <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold text-uppercase">About The Platform</span>
+      <h1 class="font-heading fs-1 mt-2">Pioneering Next-Generation Academic Project Management</h1>
+      <p class="text-muted lead">ProjectHub bridges the communication gap between university students, faculty supervisors, and academic evaluation committees.</p>
+    </div>
+  </div>
+
+  <div class="row g-5 align-items-center mb-5">
+    <div class="col-lg-6">
+      <div class="p-4 p-md-5 rounded-4 text-white shadow-lg" style="background: linear-gradient(135deg, #0b132b, #1c2541);">
+        <h3 class="font-heading text-white mb-3">Our Core Mission</h3>
+        <p class="text-white-50 mb-4">
+          To modernize senior capstone projects, engineering dissertations, and collaborative research by offering structured versioning, rigorous milestone accountability, and transparent rubric evaluation.
+        </p>
+        <div class="d-flex flex-column gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-check-circle text-primary fs-5"></i>
+            <span>Eliminate fragmented communications over WhatsApp and email</span>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-check-circle text-primary fs-5"></i>
+            <span>Digitize guide requests, approvals, and milestone sign-offs</span>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <i class="fas fa-check-circle text-primary fs-5"></i>
+            <span>Standardize 5-criteria marks grading and institutional reporting</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <h3 class="font-heading mb-3">Architecture & Technology</h3>
+      <p class="text-muted">
+        Engineered with a high-performance Python Flask backend, Bootstrap 5 UI/UX design system, and MySQL database schema, ProjectHub is built for reliability, data security, and future AI enhancements.
+      </p>
+      <div class="row g-3 mt-2">
+        <div class="col-6">
+          <div class="p-3 border rounded-3 bg-white">
+            <h6 class="fw-bold mb-1"><i class="fab fa-python text-primary me-2"></i>Python Flask</h6>
+            <small class="text-muted">Modular Blueprints & REST APIs</small>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-3 border rounded-3 bg-white">
+            <h6 class="fw-bold mb-1"><i class="fas fa-database text-primary me-2"></i>MySQL & SQLite</h6>
+            <small class="text-muted">Relational schema with cascade rules</small>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-3 border rounded-3 bg-white">
+            <h6 class="fw-bold mb-1"><i class="fab fa-bootstrap text-primary me-2"></i>Bootstrap 5</h6>
+            <small class="text-muted">Responsive mobile & desktop UI</small>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="p-3 border rounded-3 bg-white">
+            <h6 class="fw-bold mb-1"><i class="fas fa-robot text-primary me-2"></i>AI Assistant</h6>
+            <small class="text-muted">Ideas, Code Review & Roadmaps</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

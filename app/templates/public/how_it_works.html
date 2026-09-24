@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}How It Works – ProjectHub Academic Workflow{% endblock %}
+
+{% block public_content %}
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold text-uppercase">Lifecycle Guide</span>
+    <h1 class="font-heading fs-1 mt-2">How ProjectHub Works</h1>
+    <p class="text-muted">A clear, 5-step journey from project ideation to final grade certification.</p>
+  </div>
+
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="milestone-timeline">
+        <!-- Step 1 -->
+        <div class="milestone-node completed">
+          <div class="milestone-dot"><i class="fas fa-check text-white" style="font-size: 0.6rem;"></i></div>
+          <div class="milestone-card shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-bold mb-0 text-navy">Step 1: Student Registration & Admin Verification</h5>
+              <span class="badge bg-primary">Step 01</span>
+            </div>
+            <p class="text-muted small mb-0">Students register with their academic email and roll number. The Administrator validates credentials in the Admin Approvals queue to activate the account.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="milestone-node in_progress">
+          <div class="milestone-dot"><i class="fas fa-arrow-right text-white" style="font-size: 0.6rem;"></i></div>
+          <div class="milestone-card shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-bold mb-0 text-navy">Step 2: Team Formation & Faculty Guide Request</h5>
+              <span class="badge bg-primary">Step 02</span>
+            </div>
+            <p class="text-muted small mb-0">The team leader creates a project, invites 1 to 3 peer students (2–4 members total), defines roles, and sends a formal guide proposal to a faculty professor.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="milestone-node">
+          <div class="milestone-dot"></div>
+          <div class="milestone-card shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-bold mb-0 text-navy">Step 3: Milestone Planning & Execution</h5>
+              <span class="badge bg-secondary">Step 03</span>
+            </div>
+            <p class="text-muted small mb-0">Teams execute project phases (SRS, Design, Implementation, Testing), upload files, commit source code, and interact with guides via the team discussion forum.</p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="milestone-node">
+          <div class="milestone-dot"></div>
+          <div class="milestone-card shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-bold mb-0 text-navy">Step 4: Faculty Feedback & Milestone Sign-Off</h5>
+              <span class="badge bg-secondary">Step 04</span>
+            </div>
+            <p class="text-muted small mb-0">The faculty guide reviews uploaded SRS documents, inspects code quality, posts structured feedback and star ratings, and marks milestones complete.</p>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="milestone-node">
+          <div class="milestone-dot"></div>
+          <div class="milestone-card shadow-sm">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="fw-bold mb-0 text-navy">Step 5: Final Submission & 5-Criteria Rubric Grading</h5>
+              <span class="badge bg-success">Step 05</span>
+            </div>
+            <p class="text-muted small mb-0">The student leader uploads the final report and demo links. Faculty evaluates across Presentation, Code, Docs, Viva, and Innovation (/100), producing an official grade card.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

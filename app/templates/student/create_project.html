@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Create Academic Project – ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="font-heading mb-1">Create New Project</h2>
+    <p class="text-muted small mb-0">Assemble your 2–4 student team, choose a faculty guide, and establish your project foundation.</p>
+  </div>
+  <button class="btn btn-outline-primary d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+    <i class="fas fa-sparkles text-primary"></i>
+    <span>Brainstorm Ideas with AI</span>
+  </button>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <div class="ph-card p-4 p-md-5 bg-white shadow-sm rounded-4">
+      <form method="POST" action="{{ url_for('student.create_project') }}" id="projectCreateForm">
+        
+        <!-- Section 1: Project Information -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <span class="badge bg-primary rounded-circle p-2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">1</span>
+            <h5 class="font-heading mb-0 text-navy">Project Information & Scope</h5>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label fw-semibold small">Project Title <span class="text-danger">*</span></label>
+              <input type="text" name="title" id="projectTitleInput" class="form-control" placeholder="e.g. DevSphere: AI-Powered Autonomous Cloud IDE" required>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Domain / Specialization <span class="text-danger">*</span></label>
+              <select name="domain" class="form-select" required>
+                <option value="Web SaaS" selected>Web SaaS & Distributed Cloud</option>
+                <option value="AI/ML">Artificial Intelligence & Deep Learning</option>
+                <option value="IoT & Embedded">IoT & Embedded Systems</option>
+                <option value="Cybersecurity">Cybersecurity & Zero Trust</option>
+                <option value="Blockchain">Blockchain & Decentralized Web</option>
+                <option value="Mobile App">Mobile & Cross-Platform Systems</option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">Tech Stack & Tools <span class="text-danger">*</span></label>
+              <input type="text" name="tech_stack" id="projectTechStackInput" class="form-control" placeholder="e.g. Python Flask, React, PostgreSQL, Docker, Redis" required>
+              <small class="text-muted">Separate technologies with commas.</small>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small">Project Abstract / Problem Statement <span class="text-danger">*</span></label>
+              <textarea name="abstract" id="projectAbstractInput" class="form-control" rows="4" placeholder="Describe the problem, proposed methodology, and expected deliverables in detail..." required></textarea>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">GitHub Repository URL (Optional)</label>
+              <input type="url" name="github_url" class="form-control" placeholder="https://github.com/username/project">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Live Demo URL (Optional)</label>
+              <input type="url" name="live_demo_url" class="form-control" placeholder="https://demo.projecthub.edu">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Team Members Selection (2–4 Members Total) -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <span class="badge bg-primary rounded-circle p-2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">2</span>
+            <div>
+              <h5 class="font-heading mb-0 text-navy">Team Formation (2 to 4 Members Total)</h5>
+              <small class="text-muted">You are automatically assigned as Team Leader. Add 1 to 3 fellow students.</small>
+            </div>
+          </div>
+
+          <div class="p-3 bg-light rounded-3 mb-3 d-flex align-items-center gap-3">
+            <div class="user-avatar-circle" style="width: 36px; height: 36px;">
+              {{ current_user.full_name[0] }}
+            </div>
+            <div>
+              <strong class="text-dark">{{ current_user.full_name }}</strong> <span class="badge bg-primary ms-2">Team Leader</span>
+              <div class="small text-muted">{{ current_user.email }} · {{ current_user.roll_or_faculty_id }}</div>
+            </div>
+          </div>
+
+          <div class="row g-3" id="teamMembersContainer">
+            <!-- Member Slot 2 -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Team Member 2</label>
+              <select name="team_members" class="form-select mb-2">
+                <option value="">-- Select Student --</option>
+                {% for student in available_students %}
+                  <option value="{{ student.id }}">{{ student.full_name }} ({{ student.roll_or_faculty_id }})</option>
+                {% endfor %}
+              </select>
+              <input type="text" name="member_roles" class="form-control form-control-sm" placeholder="Role (e.g. Frontend Developer & UI/UX)">
+            </div>
+
+            <!-- Member Slot 3 -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Team Member 3 (Optional)</label>
+              <select name="team_members" class="form-select mb-2">
+                <option value="">-- Select Student (Optional) --</option>
+                {% for student in available_students %}
+                  <option value="{{ student.id }}">{{ student.full_name }} ({{ student.roll_or_faculty_id }})</option>
+                {% endfor %}
+              </select>
+              <input type="text" name="member_roles" class="form-control form-control-sm" placeholder="Role (e.g. Backend Engineer & Database)">
+            </div>
+
+            <!-- Member Slot 4 -->
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Team Member 4 (Optional)</label>
+              <select name="team_members" class="form-select mb-2">
+                <option value="">-- Select Student (Optional) --</option>
+                {% for student in available_students %}
+                  <option value="{{ student.id }}">{{ student.full_name }} ({{ student.roll_or_faculty_id }})</option>
+                {% endfor %}
+              </select>
+              <input type="text" name="member_roles" class="form-control form-control-sm" placeholder="Role (e.g. QA & Documentation)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Faculty Guide Selection -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+            <span class="badge bg-primary rounded-circle p-2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;">3</span>
+            <div>
+              <h5 class="font-heading mb-0 text-navy">Faculty Guide Selection</h5>
+              <small class="text-muted">Choose your department supervisor to review milestones and evaluate deliverables.</small>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-12">
+              <label class="form-label fw-semibold small">Select Faculty Supervisor <span class="text-danger">*</span></label>
+              <select name="faculty_guide_id" class="form-select" required>
+                <option value="" disabled selected>-- Choose Certified Faculty Guide --</option>
+                {% for guide in faculty_guides %}
+                  <option value="{{ guide.id }}">{{ guide.full_name }} · {{ guide.department }} ({{ guide.skills or 'Software Engineering' }})</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Automated Milestones Notice -->
+        <div class="alert alert-success py-2 px-3 small d-flex align-items-center gap-2 mb-4">
+          <i class="fas fa-check-double fs-5 text-success"></i>
+          <div>
+            <strong>Automated Milestones:</strong> Standard academic milestones (SRS Analysis, System Design, Implementation, Viva Defense) will be automatically provisioned in your workspace.
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+          <button type="submit" class="btn btn-primary-ph px-4">
+            <i class="fas fa-paper-plane me-2"></i> Create Project & Send Guide Request
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

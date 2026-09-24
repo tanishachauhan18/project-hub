@@ -1,26 +1,128 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --color-primary: #008766;
+  --color-primary-hover: #007054;
+  --color-primary-dark: #005943;
+  --color-primary-light: #10b981;
+  --color-primary-mint: #e6f4f1;
+  --color-primary-mint-subtle: #f4faf8;
+  --color-primary-border: #bfe5dc;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-slate-heading: #0f2427;
+  --color-slate-body: #334155;
+  --color-slate-muted: #64748b;
+  --color-slate-border: #e2e8f0;
+  --color-slate-bg-light: #f8fafc;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans-modern: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono-code: 'JetBrains Mono', monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: #fbfdfc;
+  color: #334155;
+  font-family: var(--font-sans-modern);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+.font-sans-modern {
+  font-family: var(--font-sans-modern);
+}
+
+.font-mono-code {
+  font-family: var(--font-mono-code);
+}
+
+/* Hero Ambient Subtle Glow */
+.snapflow-hero-bg {
+  background: 
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 135, 102, 0.09) 0%, rgba(230, 244, 241, 0.25) 45%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(180deg, #ffffff 0%, #f7faf9 100%);
+}
+
+/* Glass & Card Elevate */
+.snapflow-card-showcase {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 
+    0 20px 50px -12px rgba(15, 36, 39, 0.08),
+    0 0 0 1px rgba(0, 135, 102, 0.05),
+    0 4px 12px -2px rgba(0, 0, 0, 0.02);
+}
+
+.snapflow-card {
+  background: #ffffff;
+  border: 1px solid #eef3f2;
+  box-shadow: 0 2px 12px -2px rgba(15, 36, 39, 0.03);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.snapflow-card:hover {
+  transform: translateY(-2px);
+  border-color: #bfe5dc;
+  box-shadow: 0 10px 25px -4px rgba(0, 135, 102, 0.08);
+}
+
+/* Pill Badge */
+.snapflow-pill-badge {
+  background-color: var(--color-primary-mint);
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary-border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.32rem 0.85rem;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Pulsing Play Button */
+@keyframes snapflowPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 135, 102, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 18px rgba(0, 135, 102, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 135, 102, 0);
+  }
+}
+
+.snapflow-play-btn {
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 8px 25px rgba(0, 135, 102, 0.35);
+  animation: snapflowPulse 2.2s infinite cubic-bezier(0.66, 0, 0, 1);
+  transition: all 0.2s ease;
+}
+
+.snapflow-play-btn:hover {
+  background: var(--color-primary-hover);
+  transform: scale(1.08);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+

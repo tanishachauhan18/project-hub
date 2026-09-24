@@ -1,0 +1,436 @@
+{% extends "base.html" %}
+{% block title %}Supervision Workspace: {{ project.title }} – ProjectHub{% endblock %}
+
+{% block content %}
+<!-- Faculty Workspace Header -->
+<div class="workspace-header mb-4">
+  <div class="row align-items-center g-4">
+    <div class="col-lg-8">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+        <span class="badge bg-success px-3 py-1">Faculty Supervision Mode</span>
+        <span class="badge bg-primary px-3 py-1">{{ project.domain }}</span>
+        <span class="badge-status badge-{{ project.status }}">{{ project.status.replace('_', ' ') }}</span>
+      </div>
+
+      <h2 class="workspace-title">{{ project.title }}</h2>
+      <p class="text-white-50 small mb-3">{{ project.abstract }}</p>
+
+      <div class="workspace-meta">
+        <div class="workspace-meta-item">
+          <i class="fas fa-crown text-warning"></i>
+          <span>Student Lead: <strong>{{ project.creator.full_name }}</strong></span>
+        </div>
+        <div class="workspace-meta-item">
+          <i class="fas fa-users"></i>
+          <span>Team: <strong>{{ project.members | length }} Students</strong></span>
+        </div>
+        <div class="workspace-meta-item">
+          <i class="fas fa-layer-group"></i>
+          <span>Milestones: <strong>{{ project.milestones | length }} Phases</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4 text-lg-end">
+      <div class="p-3 rounded-3 bg-white bg-opacity-10 backdrop-blur text-start mb-3">
+        <div class="d-flex justify-content-between text-white small fw-bold mb-1">
+          <span>Overall Project Progress</span>
+          <span>{{ project.progress_percent }}%</span>
+        </div>
+        <div class="ph-progress-container" style="background: rgba(255,255,255,0.2);">
+          <div class="ph-progress-bar" style="width: {{ project.progress_percent }}%;"></div>
+        </div>
+      </div>
+      <a href="{{ url_for('faculty.evaluate', project_id=project.id) }}" class="btn btn-warning fw-bold px-3 py-2 text-dark">
+        <i class="fas fa-award me-1"></i> {% if evaluation %}Update Rubric Scorecard ({{ evaluation.grade }}){% else %}Evaluate Project (5 Rubrics){% endif %}
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="workspace-nav-tabs">
+  <button class="workspace-tab-btn active" data-tab="overview"><i class="fas fa-info-circle"></i> Overview</button>
+  <button class="workspace-tab-btn" data-tab="team"><i class="fas fa-users"></i> Team Directory ({{ project.members | length }})</button>
+  <button class="workspace-tab-btn" data-tab="milestones"><i class="fas fa-tasks"></i> Milestones & Sign-Offs ({{ project.milestones | length }})</button>
+  <button class="workspace-tab-btn" data-tab="code"><i class="fas fa-code"></i> Code Review ({{ project.code_snippets | length }})</button>
+  <button class="workspace-tab-btn" data-tab="files"><i class="fas fa-folder-open"></i> Uploaded Documents ({{ project.files | length }})</button>
+  <button class="workspace-tab-btn" data-tab="feedback"><i class="fas fa-comment-dots"></i> Give Feedback & Remarks</button>
+  <button class="workspace-tab-btn" data-tab="discussion"><i class="fas fa-comments"></i> Discussion Forum</button>
+  <button class="workspace-tab-btn" data-tab="submission"><i class="fas fa-award"></i> Final Submission & Grading</button>
+</div>
+
+<!-- ==========================================================
+     TAB 1: OVERVIEW
+     ========================================================== -->
+<div class="tab-content-pane active" id="tab-overview">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="ph-card p-4 bg-white shadow-sm mb-4">
+        <h5 class="font-heading mb-3">Project Specifications & Objectives</h5>
+        <p class="text-muted leading-relaxed mb-4">{{ project.abstract }}</p>
+
+        <h6 class="fw-bold small text-muted text-uppercase mb-2">Declared Technologies & Frameworks</h6>
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          {% for tech in project.tech_stack.split(',') %}
+            <span class="badge bg-light text-navy border py-2 px-3 fw-semibold"><i class="fas fa-cube text-primary me-1"></i> {{ tech.strip() }}</span>
+          {% endfor %}
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3">
+              <div class="text-muted small">GitHub Repository</div>
+              {% if project.github_url %}
+                <a href="{{ project.github_url }}" target="_blank" class="fw-bold text-primary small text-break"><i class="fab fa-github me-1"></i> {{ project.github_url }}</a>
+              {% else %}
+                <span class="small text-muted fst-italic">Not linked yet</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3">
+              <div class="text-muted small">Live Demonstration</div>
+              {% if project.live_demo_url %}
+                <a href="{{ project.live_demo_url }}" target="_blank" class="fw-bold text-success small text-break"><i class="fas fa-globe me-1"></i> {{ project.live_demo_url }}</a>
+              {% else %}
+                <span class="small text-muted fst-italic">Not deployed yet</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="ph-card p-4 bg-white shadow-sm mb-4">
+        <h5 class="font-heading mb-3">Faculty Guide Actions</h5>
+        <div class="d-flex flex-column gap-2">
+          <a href="{{ url_for('faculty.evaluate', project_id=project.id) }}" class="btn btn-warning w-100 fw-bold">
+            <i class="fas fa-award me-1"></i> Complete Rubric Evaluation
+          </a>
+          <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+            <i class="fas fa-shield-alt me-1"></i> Run AI Code Vulnerability Scanner
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================
+     TAB 2: TEAM
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-team">
+  <div class="row g-4">
+    {% for member in project.members %}
+      <div class="col-md-6 col-lg-4">
+        <div class="ph-card p-4 bg-white shadow-sm h-100">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="user-avatar-circle" style="width: 48px; height: 48px;">{{ member.user.full_name[0] }}</div>
+            <div>
+              <h5 class="font-heading fs-6 mb-0">{{ member.user.full_name }}</h5>
+              <span class="badge bg-primary-subtle text-primary mt-1">{{ member.role_in_team }}</span>
+            </div>
+          </div>
+          <div class="small p-3 bg-light rounded-3">
+            <div class="mb-1"><strong>Roll ID:</strong> <span class="text-muted">{{ member.user.roll_or_faculty_id }}</span></div>
+            <div class="mb-1"><strong>Email:</strong> <span class="text-muted">{{ member.user.email }}</span></div>
+            <div><strong>Department:</strong> <span class="text-muted">{{ member.user.department }}</span></div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ==========================================================
+     TAB 3: MILESTONES & SIGNOFFS
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-milestones">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="font-heading mb-1">Milestones & Phase Verification</h4>
+      <p class="text-muted small mb-0">Sign off deliverables once students demonstrate phase requirements.</p>
+    </div>
+  </div>
+
+  <div class="milestone-timeline">
+    {% for m in project.milestones %}
+      <div class="milestone-node {{ m.status }}">
+        <div class="milestone-dot">
+          {% if m.status == 'completed' %}<i class="fas fa-check text-white" style="font-size: 0.6rem;"></i>
+          {% elif m.status == 'in_progress' %}<i class="fas fa-spinner fa-spin text-white" style="font-size: 0.6rem;"></i>{% endif %}
+        </div>
+        <div class="milestone-card shadow-sm">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+              <h5 class="fw-bold mb-1 text-navy">{{ m.title }}</h5>
+              <div class="text-muted small"><i class="fas fa-calendar-alt me-1 text-primary"></i> Due Date: <strong>{{ m.due_date.strftime('%B %d, %Y') }}</strong></div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-secondary-subtle text-dark">Weight: {{ m.weight_percent }}%</span>
+              <span class="badge-status badge-{{ m.status }}">{{ m.status.replace('_', ' ') }}</span>
+            </div>
+          </div>
+          <p class="text-muted small mb-3">{{ m.description }}</p>
+          <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+            <span class="text-muted small">{% if m.completed_at %}Signed off on {{ m.completed_at.strftime('%b %d, %Y') }}{% else %}Awaiting Guide Signoff{% endif %}</span>
+            {% if m.status != 'completed' %}
+              <form action="{{ url_for('faculty.signoff_milestone', milestone_id=m.id) }}" method="POST">
+                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3">
+                  <i class="fas fa-check-double me-1"></i> Verify & Sign Off
+                </button>
+              </form>
+            {% else %}
+              <span class="badge bg-success-subtle text-success"><i class="fas fa-check-circle me-1"></i> Verified</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- ==========================================================
+     TAB 4: CODE REVIEW
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-code">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="font-heading mb-1">Student Code Repository</h4>
+      <p class="text-muted small mb-0">Inspect committed architecture scripts and run AI security audits.</p>
+    </div>
+    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+      <i class="fas fa-robot me-1"></i> AI Security & Complexity Analysis
+    </button>
+  </div>
+
+  {% if project.code_snippets %}
+    {% for snippet in project.code_snippets %}
+      <div class="code-container shadow-sm">
+        <div class="code-header">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fas fa-file-code text-primary"></i>
+            <span class="text-white fw-bold">{{ snippet.file_name }}</span>
+            <span class="badge bg-secondary-subtle text-dark">{{ snippet.language }}</span>
+            <span class="text-muted ms-2 small">· {{ snippet.commit_message }}</span>
+          </div>
+          <span class="text-muted small">Author: {{ snippet.author.full_name }}</span>
+        </div>
+        <pre class="code-body"><code>{{ snippet.code_content }}</code></pre>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="p-5 text-center bg-white rounded shadow-sm text-muted">No code snippets committed yet.</div>
+  {% endif %}
+</div>
+
+<!-- ==========================================================
+     TAB 5: FILES
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-files">
+  <div class="ph-card bg-white shadow-sm overflow-hidden">
+    <div class="table-responsive">
+      <table class="ph-table">
+        <thead>
+          <tr>
+            <th>Document</th>
+            <th>Category</th>
+            <th>Version</th>
+            <th>Size</th>
+            <th>Uploaded By</th>
+            <th class="text-end">Download</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if project.files %}
+            {% for file in project.files %}
+              <tr>
+                <td>
+                  <strong class="text-navy">{{ file.original_name }}</strong>
+                  <div class="text-muted small">{{ file.description }}</div>
+                </td>
+                <td><span class="badge bg-primary-subtle text-primary">{{ file.file_category }}</span></td>
+                <td><code>{{ file.version }}</code></td>
+                <td>{{ file.file_size_kb }} KB</td>
+                <td>{{ file.uploader.full_name }}</td>
+                <td class="text-end">
+                  <a href="{{ url_for('student.download_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-download me-1"></i> Download
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="6" class="text-center py-4 text-muted">No documents uploaded yet.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================
+     TAB 6: FEEDBACK FORM
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-feedback">
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="ph-card p-4 bg-white shadow-sm">
+        <h5 class="font-heading mb-3">Post Official Remarks & Feedback</h5>
+        <form action="{{ url_for('faculty.add_feedback') }}" method="POST">
+          <input type="hidden" name="project_id" value="{{ project.id }}">
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Feedback Classification</label>
+            <select name="remarks_type" class="form-select" required>
+              <option value="General" selected>General Guidance</option>
+              <option value="Milestone Review">Milestone Phase Review</option>
+              <option value="Code Review">Source Code Review</option>
+              <option value="Correction">Required Correction / Defect</option>
+              <option value="Approval">Formal Approval</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Associated Milestone (Optional)</label>
+            <select name="milestone_id" class="form-select">
+              <option value="">-- General Project Review --</option>
+              {% for m in project.milestones %}
+                <option value="{{ m.id }}">{{ m.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Quality Rating (1 to 5 Stars)</label>
+            <select name="rating" class="form-select" required>
+              <option value="5" selected>⭐⭐⭐⭐⭐ (5/5 Exceptional)</option>
+              <option value="4">⭐⭐⭐⭐ (4/5 Proficient)</option>
+              <option value="3">⭐⭐⭐ (3/5 Acceptable)</option>
+              <option value="2">⭐⭐ (2/5 Revision Required)</option>
+              <option value="1">⭐ (1/5 Unsatisfactory)</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Remarks & Action Items</label>
+            <textarea name="feedback_text" class="form-control" rows="4" placeholder="Detail recommendations for the student team..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary-ph w-100 justify-content-center">
+            <i class="fas fa-paper-plane me-2"></i> Submit Feedback to Team
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="ph-card p-4 bg-white shadow-sm h-100">
+        <h5 class="font-heading mb-3">Logged Remarks History</h5>
+        {% if project.feedbacks %}
+          <div class="list-group list-group-flush">
+            {% for fb in project.feedbacks %}
+              <div class="list-group-item px-0 py-3">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="badge bg-primary-subtle text-primary">{{ fb.remarks_type }}</span>
+                  <div class="text-warning small">
+                    {% for _ in range(fb.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                  </div>
+                </div>
+                <p class="small text-dark mb-1">"{{ fb.feedback_text }}"</p>
+                <small class="text-muted">{{ fb.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-5 text-muted small">No feedback logged yet.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================================
+     TAB 7: DISCUSSION
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-discussion">
+  <div class="discussion-box shadow-sm">
+    <div class="discussion-messages">
+      {% for msg in project.discussions %}
+        <div class="chat-bubble-wrapper {% if msg.user_id == current_user.id %}own{% elif msg.sender.role == 'faculty' %}guide{% endif %}">
+          <div class="user-avatar-circle" style="width: 32px; height: 32px; font-size: 0.8rem;">{{ msg.sender.full_name[0] }}</div>
+          <div class="chat-bubble">
+            <div class="d-flex justify-content-between align-items-center gap-3 mb-1">
+              <strong style="font-size: 0.78rem;">{{ msg.sender.full_name }}</strong>
+              <span class="text-muted opacity-75" style="font-size: 0.65rem;">{{ msg.created_at | timeago }}</span>
+            </div>
+            <div>{{ msg.message }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <form method="POST" action="{{ url_for('student.post_discussion', project_id=project.id) }}" class="discussion-input-bar">
+      <input type="text" name="message" class="form-control" placeholder="Post instruction or meeting reminder..." required>
+      <button type="submit" class="btn btn-primary-ph px-4"><i class="fas fa-paper-plane"></i></button>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================================
+     TAB 8: FINAL SUBMISSION & GRADING
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-submission">
+  {% if evaluation %}
+    <div class="ph-card p-4 p-md-5 bg-white shadow-sm border border-success rounded-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+          <span class="badge bg-success-subtle text-success px-3 py-2 fw-bold text-uppercase mb-2 d-inline-block">Evaluation Completed</span>
+          <h3 class="font-heading mb-0 text-navy">Certified Rubric Scorecard</h3>
+        </div>
+        <div class="text-end">
+          <div class="display-5 fw-bold text-primary mb-0">{{ evaluation.total_marks }} <span class="fs-6 text-muted">/ 100</span></div>
+          <span class="badge bg-primary fs-6 px-3">Grade: {{ evaluation.grade }}</span>
+        </div>
+      </div>
+
+      <div class="rubric-grid">
+        <div class="rubric-card">
+          <div class="rubric-header"><span>Presentation</span><span class="rubric-score-badge">{{ evaluation.marks_presentation }} / 20</span></div>
+        </div>
+        <div class="rubric-card">
+          <div class="rubric-header"><span>Code Quality</span><span class="rubric-score-badge">{{ evaluation.marks_code_quality }} / 20</span></div>
+        </div>
+        <div class="rubric-card">
+          <div class="rubric-header"><span>Documentation</span><span class="rubric-score-badge">{{ evaluation.marks_documentation }} / 20</span></div>
+        </div>
+        <div class="rubric-card">
+          <div class="rubric-header"><span>Technical Viva</span><span class="rubric-score-badge">{{ evaluation.marks_viva }} / 20</span></div>
+        </div>
+        <div class="rubric-card">
+          <div class="rubric-header"><span>Innovation</span><span class="rubric-score-badge">{{ evaluation.marks_innovation }} / 20</span></div>
+        </div>
+      </div>
+
+      <div class="p-3 bg-light rounded-3 mb-4">
+        <strong>Remarks:</strong>
+        <p class="text-muted small mb-0">{{ evaluation.remarks }}</p>
+      </div>
+
+      <a href="{{ url_for('faculty.evaluate', project_id=project.id) }}" class="btn btn-outline-primary">
+        <i class="fas fa-edit me-1"></i> Edit Rubric Scorecard
+      </a>
+    </div>
+  {% else %}
+    <div class="ph-card p-5 text-center bg-white shadow-sm">
+      <div class="stat-icon rose mx-auto mb-3"><i class="fas fa-award"></i></div>
+      <h4 class="font-heading mb-2">Project Awaiting Rubric Evaluation</h4>
+      <p class="text-muted small mb-4">Review final deliverables, code repository, and record scores across all 5 rubric criteria.</p>
+      <a href="{{ url_for('faculty.evaluate', project_id=project.id) }}" class="btn btn-warning fw-bold px-4 py-2">
+        <i class="fas fa-clipboard-check me-2"></i> Launch 5-Criteria Rubric Grading Sheet
+      </a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

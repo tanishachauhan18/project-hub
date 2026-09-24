@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block title %}Faculty Dashboard – ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+  <div>
+    <h2 class="font-heading mb-1">Faculty Supervision Hub</h2>
+    <p class="text-muted small mb-0">Welcome, {{ faculty.full_name }} · Department of {{ faculty.department }}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('faculty.guide_requests') }}" class="btn btn-outline-warning btn-sm d-flex align-items-center gap-1">
+      <i class="fas fa-user-clock"></i>
+      <span>Guide Requests</span>
+      {% if pending_requests %}<span class="badge bg-danger ms-1">{{ pending_requests | length }}</span>{% endif %}
+    </a>
+    <a href="{{ url_for('faculty.assigned_projects') }}" class="btn btn-primary-ph btn-sm">
+      <i class="fas fa-tasks me-1"></i> All Guided Projects
+    </a>
+  </div>
+</div>
+
+<!-- KPI Metric Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="fas fa-project-diagram"></i></div>
+      <div>
+        <div class="stat-value">{{ assigned_projects | length }}</div>
+        <div class="stat-label">Total Assigned Projects</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon amber"><i class="fas fa-user-clock"></i></div>
+      <div>
+        <div class="stat-value">{{ pending_requests | length }}</div>
+        <div class="stat-label">Pending Guide Requests</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon emerald"><i class="fas fa-user-graduate"></i></div>
+      <div>
+        <div class="stat-value">{{ total_guided_students }}</div>
+        <div class="stat-label">Guided Students</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-lg-3">
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="fas fa-award"></i></div>
+      <div>
+        <div class="stat-value">{{ evaluated_projects | length }}</div>
+        <div class="stat-label">Evaluated / Certified</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Pending Guide Requests Alert Queue -->
+{% if pending_requests %}
+  <div class="ph-card bg-white shadow-sm border border-warning mb-4">
+    <div class="ph-card-header bg-warning-subtle">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fas fa-bell text-warning fs-5"></i>
+        <h5 class="ph-card-title text-dark">Action Required: {{ pending_requests | length }} Pending Guide Proposal(s)</h5>
+      </div>
+      <a href="{{ url_for('faculty.guide_requests') }}" class="btn btn-sm btn-dark">Review All Requests</a>
+    </div>
+    <div class="p-0">
+      <div class="table-responsive">
+        <table class="ph-table">
+          <thead>
+            <tr>
+              <th>Project Title</th>
+              <th>Domain</th>
+              <th>Student Leader</th>
+              <th>Team Size</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for req in pending_requests %}
+              <tr>
+                <td>
+                  <strong class="text-navy">{{ req.title }}</strong>
+                  <div class="text-muted small">{{ req.abstract | truncate(90) }}</div>
+                </td>
+                <td><span class="badge bg-primary-subtle text-primary">{{ req.domain }}</span></td>
+                <td>{{ req.creator.full_name }}</td>
+                <td>{{ req.members | length }} Students</td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-2">
+                    <form action="{{ url_for('faculty.handle_guide_request', project_id=req.id, action='accept') }}" method="POST">
+                      <button type="submit" class="btn btn-sm btn-success px-3">
+                        <i class="fas fa-check me-1"></i> Accept
+                      </button>
+                    </form>
+                    <form action="{{ url_for('faculty.handle_guide_request', project_id=req.id, action='reject') }}" method="POST">
+                      <button type="submit" class="btn btn-sm btn-outline-danger px-2">
+                        <i class="fas fa-times me-1"></i> Decline
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- Guided Projects Overview Grid -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4 class="font-heading mb-0">Active Supervised Projects</h4>
+  <a href="{{ url_for('faculty.assigned_projects') }}" class="small text-decoration-none">View Complete Directory</a>
+</div>
+
+{% if active_projects or evaluated_projects %}
+  <div class="row g-4 mb-4">
+    {% for p in assigned_projects %}
+      <div class="col-lg-6">
+        <div class="ph-card ph-card-hover bg-white shadow-sm p-4 h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge bg-primary-subtle text-primary">{{ p.domain }}</span>
+              <span class="badge-status badge-{{ p.status }}">{{ p.status.replace('_', ' ') }}</span>
+            </div>
+
+            <h5 class="font-heading mb-2">
+              <a href="{{ url_for('faculty.workspace', project_id=p.id) }}" class="text-navy text-decoration-none">{{ p.title }}</a>
+            </h5>
+            <p class="text-muted small mb-3">{{ p.abstract | truncate(130) }}</p>
+
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small fw-bold mb-1">
+                <span class="text-muted">Progress</span>
+                <span class="text-primary">{{ p.progress_percent }}%</span>
+              </div>
+              <div class="ph-progress-container">
+                <div class="ph-progress-bar" style="width: {{ p.progress_percent }}%;"></div>
+              </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 small text-muted mb-3">
+              <i class="fas fa-users text-primary"></i> Team Leader: <strong>{{ p.creator.full_name }}</strong> ({{ p.members | length }} members)
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+            <a href="{{ url_for('faculty.evaluate', project_id=p.id) }}" class="btn btn-sm btn-outline-success">
+              <i class="fas fa-award me-1"></i> {% if p.evaluation %}Edit Evaluation ({{ p.evaluation.grade }}){% else %}Grade & Evaluate{% endif %}
+            </a>
+            <a href="{{ url_for('faculty.workspace', project_id=p.id) }}" class="btn btn-sm btn-primary-ph">
+              <i class="fas fa-columns me-1"></i> Open Workspace
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="ph-card p-5 text-center bg-white shadow-sm">
+    <div class="stat-icon blue mx-auto mb-3"><i class="fas fa-tasks"></i></div>
+    <h5 class="font-heading mb-2">No Active Guided Projects</h5>
+    <p class="text-muted small">Student guide requests will appear here for your review and supervision.</p>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}System Settings – Admin | ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="font-heading mb-1">System & Academic Settings</h2>
+    <p class="text-muted small mb-0">Configure institutional parameters, academic calendar periods, and storage rules.</p>
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="ph-card p-4 p-md-5 bg-white shadow-sm rounded-4">
+      <form method="POST" action="{{ url_for('admin.settings') }}">
+        <h5 class="font-heading mb-3 text-navy"><i class="fas fa-sliders-h text-primary me-2"></i>Academic Calendar Configuration</h5>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Current Academic Year</label>
+            <input type="text" name="academic_year" class="form-control" value="{{ academic_year }}" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Semester</label>
+            <select class="form-select">
+              <option value="Spring" selected>Spring Semester (Final Senior Design)</option>
+              <option value="Fall">Fall Semester (Research & Proposal)</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">SRS Proposal Deadline</label>
+            <input type="date" class="form-control" value="2026-10-15">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Final Project Defense Deadline</label>
+            <input type="date" class="form-control" value="2026-12-20">
+          </div>
+        </div>
+
+        <h5 class="font-heading mb-3 text-navy"><i class="fas fa-shield-alt text-primary me-2"></i>Storage & Security Limits</h5>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Maximum Team Size</label>
+            <input type="number" class="form-control" value="4" min="2" max="6">
+            <small class="text-muted">Standard rule: 2 to 4 students per group.</small>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label fw-semibold small">Single Deliverable Size Limit (MB)</label>
+            <input type="number" class="form-control" value="32">
+          </div>
+
+          <div class="col-12">
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" role="switch" id="aiAssistantSwitch" checked>
+              <label class="form-check-label fw-semibold small" for="aiAssistantSwitch">Enable AI Assistant Tools for Students & Guides</label>
+            </div>
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" role="switch" id="autoApproveSwitch">
+              <label class="form-check-label fw-semibold small" for="autoApproveSwitch">Auto-Approve Verified University Email Domains</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary-ph px-4">
+            <i class="fas fa-save me-2"></i> Save System Configuration
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

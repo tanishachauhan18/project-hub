@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Features – ProjectHub Academic Collaboration{% endblock %}
+
+{% block public_content %}
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-bold text-uppercase">Complete Feature Matrix</span>
+    <h1 class="font-heading fs-1 mt-2">Comprehensive Features for University Projects</h1>
+    <p class="text-muted">A deep dive into the modules powering ProjectHub.</p>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <div class="col-md-4">
+      <div class="ph-card p-4 h-100 bg-white shadow-sm">
+        <div class="stat-icon blue mb-3"><i class="fas fa-user-shield"></i></div>
+        <h5 class="font-heading mb-2">Registration & Approval Gate</h5>
+        <p class="text-muted small">Prevents unverified account creation. Administrators review and approve student roll numbers and departments before access is granted.</p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="ph-card p-4 h-100 bg-white shadow-sm">
+        <div class="stat-icon emerald mb-3"><i class="fas fa-users"></i></div>
+        <h5 class="font-heading mb-2">Team Formation (2–4 Members)</h5>
+        <p class="text-muted small">Student leaders can assemble teams with custom member role titles such as Frontend Engineer, Backend Developer, or ML Researcher.</p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="ph-card p-4 h-100 bg-white shadow-sm">
+        <div class="stat-icon purple mb-3"><i class="fas fa-chalkboard-teacher"></i></div>
+        <h5 class="font-heading mb-2">Faculty Guide Selection</h5>
+        <p class="text-muted small">Students submit proposals directly to certified faculty members who can accept or reject requests based on domain expertise and capacity.</p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="ph-card p-4 h-100 bg-white shadow-sm">
+        <div class="stat-icon amber mb-3"><i class="fas fa-chart-line"></i></div>
+        <h5 class="font-heading mb-2">Dynamic Progress Calculation</h5>
+        <p class="text-muted small">Progress bar percentages automatically calculate based on the completed weights of configured milestones (SRS, Design, Modules, Viva).</p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="ph-card p-4 h-100 bg-white shadow-sm">
+        <div class="stat-icon rose mb-3"><i class="fas fa-code"></i></div>
+        <h5 class="font-heading mb-2">Source Code Collaboration</h5>
+        <p class="text-muted small">Built-in code repository with syntax highlighting, commit messages, author tagging, and external GitHub repository linking.</p>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="ph-card p-4 h-100 bg-white shadow-sm">
+        <div class="stat-icon blue mb-3"><i class="fas fa-award"></i></div>
+        <h5 class="font-heading mb-2">Rubric Evaluation Sheet</h5>
+        <p class="text-muted small">Standardized 5-criteria grading rubric (/20 each, Total /100) covering Presentation, Code Quality, Documentation, Viva, and Innovation.</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

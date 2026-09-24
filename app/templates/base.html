@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}ProjectHub – Academic Project Collaboration & Management System{% endblock %}</title>
+  <meta name="description" content="Centralized SaaS platform for University Students, Faculty Guides, and Administrators to collaborate on engineering projects, manage code, track milestones, and evaluate deliverables.">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233a86ff'/><text y='70' x='50' text-anchor='middle' fill='white' font-size='65' font-family='sans-serif' font-weight='bold'>P</text></svg>">
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Application Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/workspace.css') }}">
+  
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  {% if current_user and request.endpoint and not request.endpoint.startswith('public.') and not request.endpoint.startswith('auth.') %}
+  <!-- ==========================================================
+       AUTHENTICATED DASHBOARD LAYOUT (STUDENT / FACULTY / ADMIN)
+       ========================================================== -->
+  <div class="app-wrapper">
+    <!-- Left Sidebar -->
+    <aside class="app-sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon-box">P</div>
+        <div class="brand-text">ProjectHub</div>
+        <span class="brand-badge">{{ current_user.role }}</span>
+      </div>
+
+      <div class="sidebar-nav">
+        {% if current_user.role == 'student' %}
+          <div class="nav-section-title">Student Portal</div>
+          <a href="{{ url_for('student.dashboard') }}" class="sidebar-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+            <i class="fas fa-chart-pie"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="{{ url_for('student.projects') }}" class="sidebar-link {% if request.endpoint == 'student.projects' %}active{% endif %}">
+            <i class="fas fa-layer-group"></i>
+            <span>My Projects</span>
+          </a>
+          <a href="{{ url_for('student.create_project') }}" class="sidebar-link {% if request.endpoint == 'student.create_project' %}active{% endif %}">
+            <i class="fas fa-plus-circle"></i>
+            <span>Create Project</span>
+          </a>
+
+        {% elif current_user.role == 'faculty' %}
+          <div class="nav-section-title">Faculty Hub</div>
+          <a href="{{ url_for('faculty.dashboard') }}" class="sidebar-link {% if request.endpoint == 'faculty.dashboard' %}active{% endif %}">
+            <i class="fas fa-chart-line"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="{{ url_for('faculty.guide_requests') }}" class="sidebar-link {% if request.endpoint == 'faculty.guide_requests' %}active{% endif %}">
+            <i class="fas fa-user-clock"></i>
+            <span>Guide Requests</span>
+          </a>
+          <a href="{{ url_for('faculty.assigned_projects') }}" class="sidebar-link {% if request.endpoint == 'faculty.assigned_projects' %}active{% endif %}">
+            <i class="fas fa-tasks"></i>
+            <span>Assigned Projects</span>
+          </a>
+
+        {% elif current_user.role == 'admin' %}
+          <div class="nav-section-title">Administration</div>
+          <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Admin Dashboard</span>
+          </a>
+          <a href="{{ url_for('admin.approvals') }}" class="sidebar-link {% if request.endpoint == 'admin.approvals' %}active{% endif %}">
+            <i class="fas fa-user-check"></i>
+            <span>Student Approvals</span>
+          </a>
+          <a href="{{ url_for('admin.students') }}" class="sidebar-link {% if request.endpoint == 'admin.students' %}active{% endif %}">
+            <i class="fas fa-user-graduate"></i>
+            <span>Manage Students</span>
+          </a>
+          <a href="{{ url_for('admin.faculty') }}" class="sidebar-link {% if request.endpoint == 'admin.faculty' %}active{% endif %}">
+            <i class="fas fa-chalkboard-teacher"></i>
+            <span>Manage Faculty</span>
+          </a>
+          <a href="{{ url_for('admin.projects') }}" class="sidebar-link {% if request.endpoint == 'admin.projects' %}active{% endif %}">
+            <i class="fas fa-project-diagram"></i>
+            <span>All Projects</span>
+          </a>
+          <a href="{{ url_for('admin.files') }}" class="sidebar-link {% if request.endpoint == 'admin.files' %}active{% endif %}">
+            <i class="fas fa-folder-open"></i>
+            <span>File Monitoring</span>
+          </a>
+          <a href="{{ url_for('admin.reports') }}" class="sidebar-link {% if request.endpoint == 'admin.reports' %}active{% endif %}">
+            <i class="fas fa-file-invoice"></i>
+            <span>Reports & Analytics</span>
+          </a>
+          <a href="{{ url_for('admin.settings') }}" class="sidebar-link {% if request.endpoint == 'admin.settings' %}active{% endif %}">
+            <i class="fas fa-sliders-h"></i>
+            <span>System Settings</span>
+          </a>
+        {% endif %}
+
+        <div class="nav-section-title mt-3">Tools & Support</div>
+        <a href="#" class="sidebar-link text-info" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+          <i class="fas fa-robot"></i>
+          <span>AI Assistant</span>
+        </a>
+        <a href="{{ url_for('auth.profile') }}" class="sidebar-link {% if request.endpoint == 'auth.profile' %}active{% endif %}">
+          <i class="fas fa-user-cog"></i>
+          <span>My Profile</span>
+        </a>
+        <a href="{{ url_for('public.index') }}" class="sidebar-link" target="_blank">
+          <i class="fas fa-globe"></i>
+          <span>Public Portal</span>
+        </a>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-mini-card">
+          <div class="user-avatar-circle">
+            {{ current_user.full_name[0] }}
+          </div>
+          <div class="user-info-text">
+            <div class="user-name-title">{{ current_user.full_name }}</div>
+            <div class="user-role-label">{{ current_user.role.title() }}</div>
+          </div>
+          <a href="{{ url_for('auth.logout') }}" class="text-white-50 ms-auto" title="Sign Out">
+            <i class="fas fa-sign-out-alt"></i>
+          </a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="app-main">
+      <!-- Top Navigation Bar -->
+      <header class="app-topbar">
+        <div class="d-flex align-items-center gap-3">
+          <button class="btn btn-sm btn-light d-lg-none" id="sidebarToggleBtn">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="topbar-search d-none d-md-block">
+            <i class="fas fa-search"></i>
+            <input type="text" id="tableSearchInput" placeholder="Search projects, members, files...">
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- AI Assistant Quick Launch Button -->
+          <button class="btn btn-sm btn-outline-primary d-flex align-items-center gap-2 rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+            <i class="fas fa-sparkles text-primary"></i>
+            <span class="d-none d-sm-inline">AI Assistant</span>
+          </button>
+
+          <!-- Notifications Dropdown -->
+          <div class="dropdown">
+            <button class="action-btn-circle" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-bell"></i>
+              {% if unread_count > 0 %}
+                <span class="notif-badge-dot"></span>
+              {% endif %}
+            </button>
+            <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" style="width: 340px;" aria-labelledby="notifDropdown">
+              <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+                <span class="fw-bold text-dark small"><i class="fas fa-bell me-1 text-primary"></i> Notifications</span>
+                <span class="badge bg-primary rounded-pill notif-count-badge">{{ unread_count }}</span>
+              </div>
+              <div class="notification-list" style="max-height: 280px; overflow-y: auto;">
+                {% if unread_notifications %}
+                  {% for notif in unread_notifications %}
+                    <a href="{{ notif.link or '#' }}" class="dropdown-item p-3 border-bottom notif-item unread" data-notif-id="{{ notif.id }}" style="white-space: normal;">
+                      <div class="d-flex align-items-start gap-2">
+                        <span class="badge bg-{{ notif.type }} rounded-circle p-1 mt-1"></span>
+                        <div>
+                          <div class="fw-semibold small text-dark">{{ notif.title }}</div>
+                          <div class="text-muted" style="font-size: 0.78rem;">{{ notif.message }}</div>
+                          <div class="text-muted mt-1" style="font-size: 0.7rem;">{{ notif.created_at | timeago }}</div>
+                        </div>
+                      </div>
+                    </a>
+                  {% endfor %}
+                {% else %}
+                  <div class="p-4 text-center text-muted small">
+                    <i class="fas fa-check-circle text-success mb-2 fa-2x d-block"></i>
+                    All caught up! No unread notifications.
+                  </div>
+                {% endif %}
+              </div>
+              <div class="p-2 text-center bg-light border-top">
+                <a href="#" id="markAllReadBtn" class="small text-decoration-none fw-semibold text-primary">Mark all as read</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Menu Dropdown -->
+          <div class="dropdown">
+            <button class="btn p-0 border-0 d-flex align-items-center gap-2" type="button" id="userMenuBtn" data-bs-toggle="dropdown" aria-expanded="false">
+              <div class="user-avatar-circle" style="width: 38px; height: 38px;">
+                {{ current_user.full_name[0] }}
+              </div>
+              <div class="text-start d-none d-md-block">
+                <div class="fw-bold text-dark small leading-none">{{ current_user.full_name.split()[0] }}</div>
+                <small class="text-muted" style="font-size: 0.72rem;">{{ current_user.role.title() }}</small>
+              </div>
+              <i class="fas fa-chevron-down text-muted small ms-1"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="userMenuBtn">
+              <li class="px-3 py-2 border-bottom">
+                <div class="fw-bold text-dark">{{ current_user.full_name }}</div>
+                <small class="text-muted">{{ current_user.email }}</small>
+              </li>
+              <li><a class="dropdown-item py-2" href="{{ url_for('auth.profile') }}"><i class="fas fa-user-circle me-2 text-muted"></i>My Profile</a></li>
+              <li><a class="dropdown-item py-2" href="{{ url_for('public.index') }}" target="_blank"><i class="fas fa-external-link-alt me-2 text-muted"></i>Public Website</a></li>
+              <li><hr class="dropdown-divider my-1"></li>
+              <li><a class="dropdown-item py-2 text-danger" href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Container -->
+      <div class="app-content">
+        <!-- Flash Alerts -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm d-flex align-items-center gap-2" role="alert">
+                {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+                {% elif category == 'danger' %}<i class="fas fa-exclamation-circle"></i>
+                {% elif category == 'warning' %}<i class="fas fa-exclamation-triangle"></i>
+                {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+                <div>{{ message }}</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  {% else %}
+  <!-- ==========================================================
+       PUBLIC / AUTH LAYOUT
+       ========================================================== -->
+  <nav class="public-navbar">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a href="{{ url_for('public.index') }}" class="d-flex align-items-center gap-2 text-decoration-none">
+        <div class="brand-icon-box">P</div>
+        <span class="font-heading fs-4 fw-bold text-dark">Project<span class="text-primary">Hub</span></span>
+      </a>
+
+      <div class="d-none d-md-flex align-items-center gap-4">
+        <a href="{{ url_for('public.index') }}" class="text-dark fw-semibold text-decoration-none {% if request.endpoint == 'public.index' %}text-primary{% endif %}">Home</a>
+        <a href="{{ url_for('public.about') }}" class="text-dark fw-semibold text-decoration-none {% if request.endpoint == 'public.about' %}text-primary{% endif %}">About</a>
+        <a href="{{ url_for('public.features') }}" class="text-dark fw-semibold text-decoration-none {% if request.endpoint == 'public.features' %}text-primary{% endif %}">Features</a>
+        <a href="{{ url_for('public.how_it_works') }}" class="text-dark fw-semibold text-decoration-none {% if request.endpoint == 'public.how_it_works' %}text-primary{% endif %}">How It Works</a>
+        <a href="{{ url_for('public.contact') }}" class="text-dark fw-semibold text-decoration-none {% if request.endpoint == 'public.contact' %}text-primary{% endif %}">Contact</a>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        {% if current_user %}
+          {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-primary-ph">Dashboard</a>
+          {% elif current_user.role == 'faculty' %}
+            <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-primary-ph">Dashboard</a>
+          {% else %}
+            <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary-ph">Dashboard</a>
+          {% endif %}
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-ph">Sign In</a>
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary-ph">Register</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Flash Alerts for Public Pages -->
+  <div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm d-flex align-items-center gap-2" role="alert">
+            {% if category == 'success' %}<i class="fas fa-check-circle"></i>
+            {% elif category == 'danger' %}<i class="fas fa-exclamation-circle"></i>
+            {% elif category == 'warning' %}<i class="fas fa-exclamation-triangle"></i>
+            {% else %}<i class="fas fa-info-circle"></i>{% endif %}
+            <div>{{ message }}</div>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  {% block public_content %}{% endblock %}
+
+  <!-- Public Footer -->
+  <footer class="bg-navy text-white pt-5 pb-4 mt-5" style="background: #0b132b;">
+    <div class="container">
+      <div class="row g-4">
+        <div class="col-lg-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="brand-icon-box">P</div>
+            <span class="font-heading fs-4 fw-bold text-white">Project<span class="text-primary">Hub</span></span>
+          </div>
+          <p class="text-white-50 small pe-lg-4">
+            Next-generation university collaboration and project evaluation SaaS platform connecting Students, Faculty Guides, and Academic Administrators.
+          </p>
+          <div class="d-flex gap-3 text-white-50">
+            <a href="#" class="text-white-50 hover-white"><i class="fab fa-github fa-lg"></i></a>
+            <a href="#" class="text-white-50 hover-white"><i class="fab fa-linkedin fa-lg"></i></a>
+            <a href="#" class="text-white-50 hover-white"><i class="fab fa-twitter fa-lg"></i></a>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="text-white font-heading mb-3">Platform</h6>
+          <ul class="list-unstyled small text-white-50 d-flex flex-column gap-2">
+            <li><a href="{{ url_for('public.about') }}" class="text-white-50 text-decoration-none">About Us</a></li>
+            <li><a href="{{ url_for('public.features') }}" class="text-white-50 text-decoration-none">Features</a></li>
+            <li><a href="{{ url_for('public.how_it_works') }}" class="text-white-50 text-decoration-none">How It Works</a></li>
+            <li><a href="{{ url_for('auth.login') }}" class="text-white-50 text-decoration-none">Sign In</a></li>
+          </ul>
+        </div>
+
+        <div class="col-6 col-lg-2">
+          <h6 class="text-white font-heading mb-3">User Roles</h6>
+          <ul class="list-unstyled small text-white-50 d-flex flex-column gap-2">
+            <li><a href="{{ url_for('auth.login') }}" class="text-white-50 text-decoration-none">Student Portal</a></li>
+            <li><a href="{{ url_for('auth.login') }}" class="text-white-50 text-decoration-none">Faculty Guides</a></li>
+            <li><a href="{{ url_for('auth.login') }}" class="text-white-50 text-decoration-none">Admin Console</a></li>
+            <li><a href="{{ url_for('auth.register') }}" class="text-white-50 text-decoration-none">Account Approval</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-4">
+          <h6 class="text-white font-heading mb-3">Institutional Inquiries</h6>
+          <p class="small text-white-50">Department of Computer Science & Academic Planning</p>
+          <div class="small text-white-50 mb-1"><i class="fas fa-envelope me-2 text-primary"></i> support@projecthub.edu</div>
+          <div class="small text-white-50"><i class="fas fa-university me-2 text-primary"></i> University Engineering Campus</div>
+        </div>
+      </div>
+
+      <div class="border-top border-secondary mt-4 pt-3 text-center small text-white-50">
+        &copy; {{ now.year }} ProjectHub Academic Platform (Academic Year {{ academic_year }}). Built with Python Flask, Bootstrap 5 & MySQL Architecture.
+      </div>
+    </div>
+  </footer>
+  {% endif %}
+
+  <!-- AI Assistant Modal Component (Included Globally) -->
+  {% include 'components/ai_assistant_modal.html' %}
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Custom JS -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/workspace.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+  
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>

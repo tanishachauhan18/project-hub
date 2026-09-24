@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Guide Requests – Faculty Hub | ProjectHub{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h2 class="font-heading mb-1">Incoming Faculty Guide Requests</h2>
+    <p class="text-muted small mb-0">Review project proposals submitted by student teams and decide supervision.</p>
+  </div>
+</div>
+
+{% if requests %}
+  <div class="row g-4">
+    {% for req in requests %}
+      <div class="col-lg-6">
+        <div class="ph-card bg-white shadow-sm p-4 h-100 d-flex flex-column justify-content-between">
+          <div>
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge bg-primary-subtle text-primary">{{ req.domain }}</span>
+              <span class="badge bg-warning-subtle text-warning">Awaiting Your Approval</span>
+            </div>
+
+            <h4 class="font-heading text-navy mb-2">{{ req.title }}</h4>
+            <p class="text-muted small mb-3">{{ req.abstract }}</p>
+
+            <div class="p-3 bg-light rounded-3 small mb-3">
+              <div class="mb-2"><strong>Recommended Tech Stack:</strong> <code>{{ req.tech_stack }}</code></div>
+              <div class="mb-2"><strong>Team Leader:</strong> {{ req.creator.full_name }} ({{ req.creator.roll_or_faculty_id }})</div>
+              <div><strong>Team Members:</strong>
+                <ul class="mb-0 ps-3 mt-1 text-muted">
+                  {% for m in req.members %}
+                    <li>{{ m.user.full_name }} &bull; <span class="badge bg-white text-dark border">{{ m.role_in_team }}</span></li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+            <span class="text-muted small">Submitted {{ req.created_at.strftime('%b %d, %Y') }}</span>
+            <div class="d-flex gap-2">
+              <form action="{{ url_for('faculty.handle_guide_request', project_id=req.id, action='reject') }}" method="POST">
+                <button type="submit" class="btn btn-sm btn-outline-danger px-3">
+                  <i class="fas fa-times me-1"></i> Decline Request
+                </button>
+              </form>
+              <form action="{{ url_for('faculty.handle_guide_request', project_id=req.id, action='accept') }}" method="POST">
+                <button type="submit" class="btn btn-sm btn-success px-4">
+                  <i class="fas fa-check me-1"></i> Accept & Supervise
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="ph-card p-5 text-center bg-white shadow-sm">
+    <div class="stat-icon emerald mx-auto mb-3"><i class="fas fa-check-circle"></i></div>
+    <h4 class="font-heading mb-2">No Pending Guide Proposals</h4>
+    <p class="text-muted small">All incoming guide proposals have been reviewed. Check your assigned projects list.</p>
+    <a href="{{ url_for('faculty.assigned_projects') }}" class="btn btn-primary-ph">View Assigned Projects</a>
+  </div>
+{% endif %}
+{% endblock %}
