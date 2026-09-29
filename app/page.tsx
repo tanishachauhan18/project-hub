@@ -19,6 +19,8 @@ import {
   Search,
   Bell,
   LogOut,
+  LogIn,
+  UserPlus,
   ExternalLink,
   Download,
   Copy,
@@ -30,6 +32,7 @@ import {
   AlertTriangle,
   Play,
   ArrowRight,
+  ArrowLeft,
   Check,
   X,
   Star,
@@ -50,6 +53,7 @@ import {
   Upload,
   RefreshCw,
   Eye,
+  EyeOff,
   KeyRound,
   LayoutDashboard,
   Filter,
@@ -266,11 +270,23 @@ class SandboxManager:
   }
 };
 
+export interface CurrentUser {
+  name: string;
+  role: "student" | "faculty" | "admin";
+  roleLabel: string;
+  email: string;
+  roll: string;
+  dept: string;
+}
+
 export default function ProjectHubApp() {
   // Navigation & Role State
-  const [currentView, setCurrentView] = useState<"public" | "student_portal" | "faculty_hub" | "admin_console" | "auth">("public");
+  const [currentView, setCurrentView] = useState<"public" | "about" | "roles" | "student_portal" | "faculty_hub" | "admin_console" | "auth">("public");
   const [authSubView, setAuthSubView] = useState<"login" | "register" | "forgot">("login");
   const [authRoleTab, setAuthRoleTab] = useState<"student" | "faculty" | "admin">("student");
+
+  // Active Logged-in User State (null when logged out)
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
 
   // Sub-tabs inside portals
   const [studentTab, setStudentTab] = useState<"overview" | "milestones" | "code" | "files" | "chat" | "rubric">("overview");
@@ -337,12 +353,49 @@ export default function ProjectHubApp() {
   const [evalViva, setEvalViva] = useState(14);
   const [evalRemarks, setEvalRemarks] = useState("Outstanding technical implementation and clean documentation.");
 
+  // Registration & Auth Form State
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [regName, setRegName] = useState("");
+  const [regRoll, setRegRoll] = useState("");
+  const [regDept, setRegDept] = useState("Computer Science & Engineering");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+
   // Toast Helper
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
   };
 
+  // Quick autofill sample data for fast testing / demonstration
+  const handleQuickFillRegistration = (role: "student" | "faculty" | "admin") => {
+    if (role === "student") {
+      setRegName("Kunal Verma");
+      setRegRoll("CS2023-019");
+      setRegDept("Computer Science & Engineering");
+      setRegEmail("kunal.verma@projecthub.edu");
+      setRegPassword("Student@2026");
+      showToast("✨ Sample student details filled! Click Register to continue.");
+    } else if (role === "faculty") {
+      setRegName("Dr. Anita Deshmukh");
+      setRegRoll("FAC-AI-012");
+      setRegDept("Artificial Intelligence & Data Science");
+      setRegEmail("anita.deshmukh@projecthub.edu");
+      setRegPassword("Faculty@2026");
+      showToast("✨ Sample faculty details filled! Click Register to continue.");
+    } else {
+      setRegName("Dr. Rajesh Mehta");
+      setRegRoll("ADM-DEAN-001");
+      setRegDept("Dean of Academics");
+      setRegEmail("admin@projecthub.edu");
+      setRegPassword("Admin@2026");
+      showToast("✨ Sample administrator details filled! Click Register to continue.");
+    }
+  };
   // Toggle milestone completion
   const toggleMilestone = (id: number) => {
     const updated = project.milestones.map((m) => {
@@ -366,8 +419,8 @@ export default function ProjectHubApp() {
     if (!newChatMsg.trim()) return;
     const msg: DiscussionMsg = {
       id: Date.now(),
-      sender: "Aarav Sharma",
-      role: "student",
+      sender: currentUser ? currentUser.name : "Aarav Sharma",
+      role: (currentUser ? currentUser.role : "student") as "student" | "faculty" | "admin",
       time: "Just now",
       text: newChatMsg
     };
@@ -403,12 +456,156 @@ export default function ProjectHubApp() {
     showToast(`Evaluation published! Total Score: ${total}/100 (${grade})`);
   };
 
-  // Quick Demo Login Handler
+  // Quick Demo Login Handler (Updates currentUser and navigates to the portal)
   const handleDemoLogin = (role: "student" | "faculty" | "admin") => {
-    if (role === "student") setCurrentView("student_portal");
-    else if (role === "faculty") setCurrentView("faculty_hub");
-    else if (role === "admin") setCurrentView("admin_console");
-    showToast(`Signed in as Demo ${role.toUpperCase()}`);
+    if (role === "student") {
+      const user: CurrentUser = {
+        name: "Aarav Sharma",
+        role: "student",
+        roleLabel: "Student Leader",
+        email: "aarav.sharma@projecthub.edu",
+        roll: "CS2022-041",
+        dept: "Computer Science & Engineering"
+      };
+      setCurrentUser(user);
+      setCurrentView("student_portal");
+      showToast("🎉 Signed in as Aarav Sharma (Student Leader)");
+    } else if (role === "faculty") {
+      const user: CurrentUser = {
+        name: "Prof. Arvind Verma",
+        role: "faculty",
+        roleLabel: "Faculty Guide",
+        email: "arvind.verma@projecthub.edu",
+        roll: "FAC-CSE-004",
+        dept: "Computer Science & Engineering"
+      };
+      setCurrentUser(user);
+      setCurrentView("faculty_hub");
+      showToast("🎉 Signed in as Prof. Arvind Verma (Faculty Guide)");
+    } else if (role === "admin") {
+      const user: CurrentUser = {
+        name: "Dr. Rajesh Mehta",
+        role: "admin",
+        roleLabel: "Dean of Academics",
+        email: "admin@projecthub.edu",
+        roll: "ADM-DEAN-001",
+        dept: "Dean of Academics"
+      };
+      setCurrentUser(user);
+      setCurrentView("admin_console");
+      showToast("🎉 Signed in as Dr. Rajesh Mehta (Dean of Academics)");
+    }
+  };
+
+  // Custom Form Login Handler
+  const handleCustomLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginEmail.trim() || !loginPassword.trim()) {
+      showToast("Please enter your institutional email and password.");
+      return;
+    }
+
+    const emailLower = loginEmail.toLowerCase();
+    let userRole: "student" | "faculty" | "admin" = authRoleTab;
+    let userName = authRoleTab === "student" ? "Kunal Verma" : authRoleTab === "faculty" ? "Dr. Anita Deshmukh" : "Dr. Rajesh Mehta";
+    let roleLabel = authRoleTab === "student" ? "Student Member" : authRoleTab === "faculty" ? "Faculty Guide" : "Administrator";
+    let rollId = authRoleTab === "student" ? "CS2023-019" : authRoleTab === "faculty" ? "FAC-AI-012" : "ADM-DEAN-001";
+    let deptName = authRoleTab === "student" ? "Computer Science & Engineering" : authRoleTab === "faculty" ? "Artificial Intelligence" : "Dean of Academics";
+
+    if (emailLower.includes("aarav") || (authRoleTab === "student" && emailLower.includes("leader"))) {
+      userName = "Aarav Sharma";
+      roleLabel = "Student Leader";
+      rollId = "CS2022-041";
+    } else if (emailLower.includes("arvind") || (authRoleTab === "faculty" && emailLower.includes("verma"))) {
+      userName = "Prof. Arvind Verma";
+      roleLabel = "Faculty Guide";
+      rollId = "FAC-CSE-004";
+    } else if (emailLower.includes("priya")) {
+      userName = "Priya Patel";
+      roleLabel = "Student Member";
+      rollId = "CS2022-089";
+    }
+
+    const userObj: CurrentUser = {
+      name: userName,
+      role: userRole,
+      roleLabel,
+      email: loginEmail,
+      roll: rollId,
+      dept: deptName
+    };
+
+    setCurrentUser(userObj);
+    if (userRole === "student") setCurrentView("student_portal");
+    else if (userRole === "faculty") setCurrentView("faculty_hub");
+    else setCurrentView("admin_console");
+
+    showToast(`🎉 Welcome back, ${userName}! Signed in successfully.`);
+  };
+
+  // Registration Form Handler
+  const handleRegisterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regName.trim() || !regEmail.trim()) {
+      showToast("Please enter your full name and institutional email.");
+      return;
+    }
+
+    const generatedRoll = regRoll.trim() || (authRoleTab === "student" ? "CS2023-NEW" : authRoleTab === "faculty" ? "FAC-NEW-01" : "ADM-NEW-01");
+    const newStudent = {
+      id: Date.now(),
+      name: regName,
+      roll: generatedRoll,
+      dept: regDept,
+      email: regEmail,
+      date: "Today"
+    };
+    setPendingStudents([newStudent, ...pendingStudents]);
+
+    const newUserRecord = {
+      id: Date.now(),
+      name: regName,
+      roll: generatedRoll,
+      role: authRoleTab === "student" ? "Student Member" : authRoleTab === "faculty" ? "Faculty Guide" : "Administrator",
+      dept: regDept,
+      email: regEmail,
+      status: "Active"
+    };
+    setRegisteredUsers([newUserRecord, ...registeredUsers]);
+
+    const newUser: CurrentUser = {
+      name: regName,
+      role: authRoleTab,
+      roleLabel: authRoleTab === "student" ? "Student Member" : authRoleTab === "faculty" ? "Faculty Guide" : "Administrator",
+      email: regEmail,
+      roll: generatedRoll,
+      dept: regDept
+    };
+    setCurrentUser(newUser);
+
+    showToast(`🎉 Account registered successfully! Welcome to ProjectHub, ${regName}.`);
+    if (authRoleTab === "student") setCurrentView("student_portal");
+    else if (authRoleTab === "faculty") setCurrentView("faculty_hub");
+    else setCurrentView("admin_console");
+  };
+
+  // Forgot Password Handler
+  const handleForgotSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) {
+      showToast("Please enter your registered email address.");
+      return;
+    }
+    showToast(`📧 Password reset instructions have been sent to ${forgotEmail}!`);
+    setAuthSubView("login");
+  };
+
+  // Logout Handler
+  const handleLogoutConfirm = () => {
+    setShowLogoutConfirm(false);
+    setCurrentUser(null);
+    setCurrentView("public");
+    showToast("👋 You have been logged out successfully. Have a great day!");
   };
 
   // Calculate live total for faculty evaluator
@@ -452,11 +649,12 @@ export default function ProjectHubApp() {
             </div>
           </div>
 
-          {/* Role Quick Switcher Pills */}
+          {/* Main Navigation Switcher Pills */}
           <div className="flex items-center bg-slate-100/90 p-1.5 rounded-full border border-slate-200/80 text-xs font-semibold">
             <button
+              type="button"
               onClick={() => setCurrentView("public")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
                 currentView === "public"
                   ? "bg-white text-[#008766] shadow-sm font-bold"
                   : "text-slate-600 hover:text-slate-900"
@@ -465,84 +663,139 @@ export default function ProjectHubApp() {
               <span>🏠 Home</span>
             </button>
             <button
-              onClick={() => setCurrentView("student_portal")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
-                currentView === "student_portal"
-                  ? "bg-[#008766] text-white shadow-sm font-bold"
+              type="button"
+              onClick={() => setCurrentView("about")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+                currentView === "about"
+                  ? "bg-white text-[#008766] shadow-sm font-bold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <span>🎓 Student</span>
+              <span>ℹ️ About Us</span>
             </button>
             <button
-              onClick={() => setCurrentView("faculty_hub")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
-                currentView === "faculty_hub"
-                  ? "bg-[#008766] text-white shadow-sm font-bold"
+              type="button"
+              onClick={() => setCurrentView("roles")}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+                currentView === "roles"
+                  ? "bg-white text-[#008766] shadow-sm font-bold"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <span>👨‍🏫 Faculty</span>
+              <span>🧭 Portals Hub</span>
             </button>
-            <button
-              onClick={() => setCurrentView("admin_console")}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
-                currentView === "admin_console"
-                  ? "bg-[#008766] text-white shadow-sm font-bold"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <span>🛡️ Admin</span>
-            </button>
+
+            {/* If user is logged in, show active workspace shortcut pill */}
+            {currentUser && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentUser.role === "student") setCurrentView("student_portal");
+                  else if (currentUser.role === "faculty") setCurrentView("faculty_hub");
+                  else setCurrentView("admin_console");
+                }}
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all cursor-pointer ${
+                  currentView === "student_portal" || currentView === "faculty_hub" || currentView === "admin_console"
+                    ? "bg-[#008766] text-white shadow-sm font-bold"
+                    : "text-[#008766] hover:text-[#007054] bg-[#008766]/10 font-bold"
+                }`}
+              >
+                <span>🚀 My Workspace</span>
+              </button>
+            )}
           </div>
 
           {/* Right Action Tools */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowAiModal(true)}
-              className="hidden lg:flex items-center gap-1.5 bg-[#e6f4f1] text-[#008766] hover:bg-[#d5ece7] border border-[#bfe5dc] px-3 py-1.5 rounded-full text-xs font-bold transition-all shadow-xs"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Assistant</span>
-            </button>
+          <div className="flex items-center gap-2.5">
+            {currentUser ? (
+              // 🌟 LOGGED IN STATE: Show User Profile Badge + Logout Button
+              <div className="flex items-center gap-2">
+                <div 
+                  onClick={() => {
+                    if (currentUser.role === "student") setCurrentView("student_portal");
+                    else if (currentUser.role === "faculty") setCurrentView("faculty_hub");
+                    else setCurrentView("admin_console");
+                  }}
+                  className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all cursor-pointer"
+                  title="Click to go to your active workspace"
+                >
+                  <div className="w-6 h-6 rounded-lg bg-[#008766] text-white flex items-center justify-center font-bold text-xs">
+                    {currentUser.role === "student" ? "🎓" : currentUser.role === "faculty" ? "👨‍🏫" : "🛡️"}
+                  </div>
+                  <div className="text-left">
+                    <div className="text-xs font-bold text-[#0f2427] leading-none">{currentUser.name}</div>
+                    <div className="text-[10px] text-slate-500">{currentUser.roleLabel}</div>
+                  </div>
+                </div>
 
-            {currentView === "public" ? (
-              <button
-                onClick={() => { setCurrentView("auth"); setAuthSubView("login"); }}
-                className="bg-[#008766] hover:bg-[#007054] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5"
-              >
-                <User className="w-3.5 h-3.5" />
-                <span>Sign In</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowLogoutConfirm(true)}
+                  className="flex items-center gap-1.5 text-slate-600 hover:text-rose-600 px-3 py-1.5 rounded-xl hover:bg-rose-50 transition-colors text-xs font-bold border border-slate-200 hover:border-rose-200 shadow-2xs cursor-pointer"
+                  title="Sign Out of ProjectHub"
+                >
+                  <LogOut className="w-4 h-4 text-rose-500" />
+                  <span className="hidden sm:inline">Log Out</span>
+                </button>
+              </div>
             ) : (
-              <button
-                onClick={() => setShowLogoutConfirm(true)}
-                className="flex items-center gap-1.5 text-slate-600 hover:text-rose-600 px-3 py-1.5 rounded-xl hover:bg-rose-50 transition-colors text-xs font-bold border border-slate-200 hover:border-rose-200 shadow-2xs cursor-pointer"
-                title="Log Out"
-              >
-                <LogOut className="w-4 h-4 text-rose-500" />
-                <span className="hidden sm:inline">Log Out</span>
-              </button>
+              // 🌟 LOGGED OUT STATE: Show Login and Register Buttons (NO LOGOUT BUTTON)
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthSubView("login");
+                    setAuthRoleTab("student");
+                    setCurrentView("auth");
+                  }}
+                  className="flex items-center gap-1.5 text-slate-700 hover:text-[#008766] bg-white hover:bg-slate-50 border border-slate-200 hover:border-[#008766] text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-2xs cursor-pointer"
+                  title="Sign in to your account"
+                >
+                  <LogIn className="w-3.5 h-3.5 text-[#008766]" />
+                  <span>Login</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthSubView("register");
+                    setAuthRoleTab("student");
+                    setCurrentView("auth");
+                  }}
+                  className="bg-[#008766] hover:bg-[#007054] text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  title="Create a new account"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Register</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
       </header>
 
       {/* ============================================================ */}
-      {/* 1. 🌐 PUBLIC LANDING PAGE (SNAPFLOW TEAL MINIMALIST STYLE) */}
+      {/* 1. 🌐 PUBLIC LANDING PAGE (WITH THEMATIC ACADEMIC BACKGROUND) */}
       {/* ============================================================ */}
       {currentView === "public" && (
-        <main className="flex-1">
-          {/* Hero Section */}
-          <section className="snapflow-hero-bg pt-16 pb-20 px-4 sm:px-6 lg:px-8 border-b border-slate-100 text-center relative overflow-hidden">
-            <div className="max-w-4xl mx-auto">
-              
-              {/* Mint Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e6f4f1] border border-[#bfe5dc] text-[#008766] text-xs font-bold uppercase tracking-wider mb-6 shadow-xs animate-fade-in">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>WELCOME TO PROJECT HUB · UNIFIED ACADEMIC OS</span>
-              </div>
+        <main className="flex-1 relative flex flex-col justify-center items-center min-h-[calc(100vh-4.5rem)] overflow-hidden">
+          {/* Rich Website Thematic Background Image with Ambient Overlays */}
+          <div className="absolute inset-0 pointer-events-none select-none z-0">
+            {/* 3D Geometric Nodes & Network Background */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-45 mix-blend-multiply"
+              style={{ backgroundImage: `url('/hero-bg.jpg')` }}
+            />
+            {/* Ambient Radial & Linear Soft Gradients for Superior Contrast & Aesthetics */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-[#fbfdfc]/70 to-[#eef7f4]/85 backdrop-blur-[0.5px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(0,135,102,0.14),transparent_70%)]" />
+            <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[720px] h-[360px] bg-emerald-400/15 rounded-full blur-3xl pointer-events-none" />
+          </div>
 
+          {/* Clean Hero Content with Glassmorphic Card Container */}
+          <section className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 text-center">
+            <div className="max-w-4xl mx-auto backdrop-blur-md bg-white/80 border border-white/90 rounded-3xl p-8 sm:p-14 shadow-[0_20px_60px_-15px_rgba(0,135,102,0.16)] ring-1 ring-emerald-500/10">
+              
               {/* Title */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#0f2427] tracking-tight leading-[1.15] mb-6">
                 Seamless solutions for <br className="hidden sm:inline" />
@@ -555,52 +808,79 @@ export default function ProjectHubApp() {
               </p>
 
               {/* CTA Buttons */}
-              <div className="flex flex-wrap items-center justify-center gap-3.5 mb-14">
+              <div className="flex flex-wrap items-center justify-center gap-3.5">
                 <button
-                  onClick={() => setCurrentView("student_portal")}
-                  className="bg-[#008766] hover:bg-[#007054] text-white px-7 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-md shadow-emerald-800/15 hover:shadow-lg flex items-center gap-2 group"
+                  type="button"
+                  onClick={() => setCurrentView("roles")}
+                  className="bg-[#008766] hover:bg-[#007054] text-white px-8 py-4 rounded-2xl font-bold text-base transition-all shadow-md shadow-emerald-800/20 hover:shadow-lg hover:-translate-y-0.5 flex items-center gap-2 group cursor-pointer"
                 >
-                  <span>Explore Student Portal</span>
+                  <span>Explore Now</span>
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                 </button>
                 <button
+                  type="button"
+                  onClick={() => setCurrentView("about")}
+                  className="bg-white/95 hover:bg-white text-slate-700 border border-slate-300/90 px-6 py-4 rounded-2xl font-bold text-base transition-all shadow-xs hover:border-[#008766] hover:text-[#008766] flex items-center gap-2 cursor-pointer"
+                >
+                  <span>ℹ️ About Us</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setShowTourModal(true)}
-                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-6 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-xs flex items-center gap-2"
+                  className="bg-white/95 hover:bg-white text-slate-700 border border-slate-300/90 px-6 py-4 rounded-2xl font-bold text-base transition-all shadow-xs hover:border-[#008766] flex items-center gap-2 cursor-pointer"
                 >
                   <Play className="w-4 h-4 text-[#008766] fill-[#008766]" />
                   <span>Watch 2-Min Tour</span>
                 </button>
               </div>
 
-              {/* Video Tour Showcase Card */}
-              <div className="max-w-3xl mx-auto rounded-3xl p-3 bg-white/80 border border-slate-200/90 shadow-2xl backdrop-blur-sm relative group">
-                <div className="rounded-2xl bg-gradient-to-br from-[#0f2427] to-[#043328] p-8 sm:p-12 text-white relative overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
-                  
-                  {/* Decorative mesh */}
-                  <div className="absolute inset-0 bg-[radial-gradient(#008766_1px,transparent_1px)] [background-size:16px_16px] opacity-25"></div>
+            </div>
+          </section>
+        </main>
+      )}
 
-                  {/* Pulsing Play Button */}
-                  <button
-                    onClick={() => setShowTourModal(true)}
-                    className="snapflow-play-btn w-16 h-16 rounded-full flex items-center justify-center mb-4 z-10 cursor-pointer"
-                    title="Play Tour"
-                  >
-                    <Play className="w-6 h-6 fill-current ml-0.5" />
-                  </button>
-
-                  <h2 className="text-xl font-extrabold z-10 mb-1">Watch Academic Workflow Tour</h2>
-                  <p className="text-xs text-emerald-200/80 z-10 max-w-md text-center">
-                    Discover how university departments evaluate capstone projects, verify code commits, and publish rubrics in less than 2 minutes.
-                  </p>
-                </div>
+      {/* ============================================================ */}
+      {/* ℹ️ ABOUT US / PLATFORM OVERVIEW (`about`) */}
+      {/* ============================================================ */}
+      {currentView === "about" && (
+        <main className="flex-1">
+          
+          {/* About Header Banner */}
+          <section className="snapflow-hero-bg pt-12 pb-14 px-4 sm:px-6 lg:px-8 border-b border-slate-100 text-center relative">
+            <div className="max-w-4xl mx-auto">
+              
+              <div className="flex items-center justify-between mb-6 max-w-xl mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("public")}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#008766] bg-white border border-slate-200 px-3.5 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer"
+                >
+                  <span>← Back to Homepage</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurrentView("roles")}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#008766] hover:bg-[#007054] px-4 py-1.5 rounded-full shadow-xs transition-all cursor-pointer"
+                >
+                  <span>Explore Portals →</span>
+                </button>
               </div>
 
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e6f4f1] border border-[#bfe5dc] text-[#008766] text-xs font-bold uppercase tracking-wider mb-4 shadow-xs">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>ABOUT PROJECT HUB · PLATFORM ARCHITECTURE</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0f2427] tracking-tight mb-4">
+                About ProjectHub
+              </h1>
+              <p className="text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                A unified academic operating system purpose-built for engineering institutions to streamline capstone projects, mentor guidance, deliverable vaulting, and accredited rubric defense.
+              </p>
             </div>
           </section>
 
-          {/* ============================================================ */}
           {/* 🌟 SLIDE 3 INTEGRATION: OUR SOLUTION & 6 KEY BENEFITS */}
-          {/* ============================================================ */}
           <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b border-slate-100">
             <div className="max-w-6xl mx-auto">
               
@@ -661,9 +941,7 @@ export default function ProjectHubApp() {
             </div>
           </section>
 
-          {/* ============================================================ */}
           {/* 👥 SLIDE 1 INTEGRATION: SYSTEM USERS & RESPONSIBILITIES */}
-          {/* ============================================================ */}
           <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[#f7faf9] border-b border-slate-100">
             <div className="max-w-6xl mx-auto">
               
@@ -673,7 +951,7 @@ export default function ProjectHubApp() {
                   Tailored Portals for Every Stakeholder
                 </h2>
                 <p className="text-slate-600 text-sm">
-                  Click any role card below to jump straight into its dedicated interactive portal.
+                  Click any role card below to register and launch its dedicated interactive portal.
                 </p>
               </div>
 
@@ -720,13 +998,32 @@ export default function ProjectHubApp() {
                     </ul>
                   </div>
 
-                  <button
-                    onClick={() => setCurrentView("student_portal")}
-                    className="w-full py-2.5 bg-[#e6f4f1] hover:bg-[#008766] text-[#008766] hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>Launch Student Portal</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthRoleTab("student");
+                        setAuthSubView("login");
+                        setCurrentView("auth");
+                      }}
+                      className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <LogIn className="w-3.5 h-3.5 text-[#008766]" />
+                      <span>Sign In</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthRoleTab("student");
+                        setAuthSubView("register");
+                        setCurrentView("auth");
+                      }}
+                      className="py-2.5 bg-[#008766] hover:bg-[#007054] text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Register</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* 2. Faculty Card */}
@@ -770,13 +1067,32 @@ export default function ProjectHubApp() {
                     </ul>
                   </div>
 
-                  <button
-                    onClick={() => setCurrentView("faculty_hub")}
-                    className="w-full py-2.5 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>Launch Faculty Hub</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthRoleTab("faculty");
+                        setAuthSubView("login");
+                        setCurrentView("auth");
+                      }}
+                      className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <LogIn className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Sign In</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthRoleTab("faculty");
+                        setAuthSubView("register");
+                        setCurrentView("auth");
+                      }}
+                      className="py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Register</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* 3. Admin Card */}
@@ -820,13 +1136,32 @@ export default function ProjectHubApp() {
                     </ul>
                   </div>
 
-                  <button
-                    onClick={() => setCurrentView("admin_console")}
-                    className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-800 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
-                  >
-                    <span>Launch Admin Console</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthRoleTab("admin");
+                        setAuthSubView("login");
+                        setCurrentView("auth");
+                      }}
+                      className="py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <LogIn className="w-3.5 h-3.5 text-indigo-600" />
+                      <span>Sign In</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthRoleTab("admin");
+                        setAuthSubView("register");
+                        setCurrentView("auth");
+                      }}
+                      className="py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Register</span>
+                    </button>
+                  </div>
                 </div>
 
               </div>
@@ -834,9 +1169,7 @@ export default function ProjectHubApp() {
             </div>
           </section>
 
-          {/* ============================================================ */}
           {/* 🔄 SLIDE 2 INTEGRATION: INTERACTIVE OVERALL WORKFLOW FLOW */}
-          {/* ============================================================ */}
           <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
             <div className="max-w-6xl mx-auto">
               
@@ -853,7 +1186,7 @@ export default function ProjectHubApp() {
               {/* Visual Interactive Steps Flow */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { step: "01", title: "Authentication & Approval", desc: "Student registration verified by Admin with email login.", action: () => { setCurrentView("auth"); setAuthSubView("login"); } },
+                  { step: "01", title: "Authentication & Approval", desc: "Student registration verified by Admin with email verification.", action: () => { setAuthRoleTab("student"); setCurrentView("auth"); } },
                   { step: "02", title: "Team & Guide Assignment", desc: "Form team (2–4) & send proposal to Faculty Guide.", action: () => { setCurrentView("student_portal"); setShowNewProjectModal(true); } },
                   { step: "03", title: "Milestones & Deliverables", desc: "Burn down IEEE SRS, UML models, and code commits.", action: () => { setCurrentView("student_portal"); setStudentTab("milestones"); } },
                   { step: "04", title: "Rubric Defense & Grade", desc: "Faculty conducts 5-criteria viva and issues official A+ grade.", action: () => { setCurrentView("faculty_hub"); setFacultyTab("evaluator"); } }
@@ -885,20 +1218,135 @@ export default function ProjectHubApp() {
               </p>
               <div className="flex flex-wrap justify-center gap-3">
                 <button
+                  type="button"
                   onClick={() => handleDemoLogin("student")}
-                  className="bg-[#008766] hover:bg-emerald-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all"
+                  className="bg-[#008766] hover:bg-emerald-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm"
                 >
-                  Student 1-Click Demo
+                  🎓 Student 1-Click Demo
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleDemoLogin("faculty")}
-                  className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-5 py-2.5 rounded-xl border border-white/20 transition-all"
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm"
                 >
-                  Faculty 1-Click Demo
+                  👨‍🏫 Faculty 1-Click Demo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDemoLogin("admin")}
+                  className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-sm"
+                >
+                  🛡️ Admin 1-Click Demo
                 </button>
               </div>
             </div>
           </section>
+        </main>
+      )}
+
+      {/* ============================================================ */}
+      {/* 🧭 PORTALS / ROLES SELECTION VIEW (4 CENTER SQUARE BOXES) */}
+      {/* ============================================================ */}
+      {currentView === "roles" && (
+        <main className="flex-1 snapflow-hero-bg flex flex-col justify-center items-center py-16 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl w-full mx-auto">
+            
+            {/* Top Back Navigation & Header */}
+            <div className="text-center max-w-2xl mx-auto mb-10">
+              <button
+                onClick={() => setCurrentView("public")}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#008766] bg-white border border-slate-200 px-3.5 py-1.5 rounded-full shadow-2xs mb-6 transition-all cursor-pointer"
+              >
+                <span>← Back to Homepage</span>
+              </button>
+
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0f2427] tracking-tight">
+                Select Your Role
+              </h1>
+            </div>
+
+            {/* 4 Center Square Boxes Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+              
+              {/* Box 1: Home */}
+              <div
+                onClick={() => setCurrentView("public")}
+                className="bg-white rounded-3xl p-8 border-2 border-slate-200/90 shadow-sm hover:border-[#008766] hover:shadow-xl hover:-translate-y-1.5 transition-all flex flex-col items-center justify-center text-center cursor-pointer group min-h-[170px]"
+              >
+                <span className="text-4xl mb-3 group-hover:scale-110 transition-transform select-none">
+                  🏠
+                </span>
+                <h3 className="text-2xl font-black text-[#0f2427] group-hover:text-[#008766] transition-colors">
+                  Home
+                </h3>
+              </div>
+
+              {/* Box 2: Student */}
+              <div
+                onClick={() => {
+                  if (currentUser && currentUser.role === "student") {
+                    setCurrentView("student_portal");
+                  } else {
+                    setAuthRoleTab("student");
+                    setAuthSubView("login");
+                    setCurrentView("auth");
+                  }
+                }}
+                className="bg-white rounded-3xl p-8 border-2 border-slate-200/90 shadow-sm hover:border-[#008766] hover:shadow-xl hover:-translate-y-1.5 transition-all flex flex-col items-center justify-center text-center cursor-pointer group min-h-[170px]"
+              >
+                <span className="text-4xl mb-3 group-hover:scale-110 transition-transform select-none">
+                  🎓
+                </span>
+                <h3 className="text-2xl font-black text-[#0f2427] group-hover:text-[#008766] transition-colors">
+                  Student
+                </h3>
+              </div>
+
+              {/* Box 3: Faculty */}
+              <div
+                onClick={() => {
+                  if (currentUser && currentUser.role === "faculty") {
+                    setCurrentView("faculty_hub");
+                  } else {
+                    setAuthRoleTab("faculty");
+                    setAuthSubView("login");
+                    setCurrentView("auth");
+                  }
+                }}
+                className="bg-white rounded-3xl p-8 border-2 border-slate-200/90 shadow-sm hover:border-[#008766] hover:shadow-xl hover:-translate-y-1.5 transition-all flex flex-col items-center justify-center text-center cursor-pointer group min-h-[170px]"
+              >
+                <span className="text-4xl mb-3 group-hover:scale-110 transition-transform select-none">
+                  👨‍🏫
+                </span>
+                <h3 className="text-2xl font-black text-[#0f2427] group-hover:text-[#008766] transition-colors">
+                  Faculty
+                </h3>
+              </div>
+
+              {/* Box 4: Admin */}
+              <div
+                onClick={() => {
+                  if (currentUser && currentUser.role === "admin") {
+                    setCurrentView("admin_console");
+                  } else {
+                    setAuthRoleTab("admin");
+                    setAuthSubView("login");
+                    setCurrentView("auth");
+                  }
+                }}
+                className="bg-white rounded-3xl p-8 border-2 border-slate-200/90 shadow-sm hover:border-[#008766] hover:shadow-xl hover:-translate-y-1.5 transition-all flex flex-col items-center justify-center text-center cursor-pointer group min-h-[170px]"
+              >
+                <span className="text-4xl mb-3 group-hover:scale-110 transition-transform select-none">
+                  🛡️
+                </span>
+                <h3 className="text-2xl font-black text-[#0f2427] group-hover:text-[#008766] transition-colors">
+                  Admin
+                </h3>
+              </div>
+
+            </div>
+
+          </div>
         </main>
       )}
 
@@ -1737,94 +2185,428 @@ export default function ProjectHubApp() {
       )}
 
       {/* ============================================================ */}
-      {/* 5. 🔐 AUTHENTICATION VIEW (`auth`) */}
+      {/* 5. 🔐 AUTHENTICATION & REGISTRATION GATEWAY (`auth`) */}
       {/* ============================================================ */}
       {currentView === "auth" && (
-        <main className="flex-1 flex items-center justify-center p-4 snapflow-hero-bg">
-          <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200/90 shadow-2xl">
+        <main className="flex-1 flex items-center justify-center p-4 sm:p-6 snapflow-hero-bg py-10 sm:py-16">
+          <div className="max-w-lg w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-[0_20px_50px_-15px_rgba(0,135,102,0.12)] relative overflow-hidden transition-all">
             
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-[#008766] flex items-center justify-center text-white font-bold text-2xl mx-auto mb-3 shadow-md shadow-emerald-700/20">
-                P
-              </div>
-              <h2 className="text-2xl font-black text-[#0f2427]">ProjectHub Sign In</h2>
-              <p className="text-xs text-slate-500">Choose your academic role to proceed</p>
-            </div>
+            {/* Top Accent Gradient Bar */}
+            <div className={`h-1.5 w-full absolute top-0 left-0 transition-all ${
+              authRoleTab === "student" 
+                ? "bg-gradient-to-r from-emerald-500 via-[#008766] to-teal-500" 
+                : authRoleTab === "faculty" 
+                ? "bg-gradient-to-r from-amber-400 via-orange-500 to-amber-600" 
+                : "bg-gradient-to-r from-indigo-500 via-blue-600 to-purple-600"
+            }`}></div>
 
-            {/* Role Tabs */}
-            <div className="flex bg-slate-100 p-1 rounded-xl mb-6 text-xs font-bold">
+            {/* Header & Back Navigation */}
+            <div className="flex items-center justify-between mb-5 pt-1">
               <button
-                onClick={() => setAuthRoleTab("student")}
-                className={`flex-1 py-2 rounded-lg transition-all ${authRoleTab === "student" ? "bg-white text-[#008766] shadow-xs" : "text-slate-500"}`}
+                type="button"
+                onClick={() => setCurrentView("roles")}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-[#008766] bg-slate-50 hover:bg-slate-100 border border-slate-200/80 px-3 py-1.5 rounded-full transition-all cursor-pointer"
               >
-                🎓 Student
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Portals Hub</span>
               </button>
               <button
-                onClick={() => setAuthRoleTab("faculty")}
-                className={`flex-1 py-2 rounded-lg transition-all ${authRoleTab === "faculty" ? "bg-white text-[#008766] shadow-xs" : "text-slate-500"}`}
-              >
-                👨‍🏫 Faculty
-              </button>
-              <button
-                onClick={() => setAuthRoleTab("admin")}
-                className={`flex-1 py-2 rounded-lg transition-all ${authRoleTab === "admin" ? "bg-white text-[#008766] shadow-xs" : "text-slate-500"}`}
-              >
-                🛡️ Admin
-              </button>
-            </div>
-
-            {/* Instant 1-Click Demo */}
-            <button
-              onClick={() => handleDemoLogin(authRoleTab)}
-              className="w-full mb-4 py-3 bg-[#e6f4f1] hover:bg-[#d4ede7] text-[#008766] border border-[#bfe5dc] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-xs"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Instant 1-Click {authRoleTab.toUpperCase()} Demo</span>
-            </button>
-
-            <div className="flex items-center gap-3 my-4">
-              <div className="flex-1 h-px bg-slate-200"></div>
-              <span className="text-[10px] uppercase font-bold text-slate-400">or with credentials</span>
-              <div className="flex-1 h-px bg-slate-200"></div>
-            </div>
-
-            {/* Form Inputs */}
-            <form onSubmit={(e) => { e.preventDefault(); handleDemoLogin(authRoleTab); }} className="space-y-3.5">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Email / Roll Number</label>
-                <input
-                  type="text"
-                  placeholder={authRoleTab === "student" ? "aarav.sharma@projecthub.edu" : authRoleTab === "faculty" ? "arvind.verma@projecthub.edu" : "admin@projecthub.edu"}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#008766]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 focus:outline-none focus:border-[#008766]"
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 bg-[#008766] hover:bg-[#007054] text-white font-bold text-xs rounded-xl shadow-md transition-all"
-              >
-                Sign In to {authRoleTab.toUpperCase()} Portal
-              </button>
-            </form>
-
-            <div className="text-center mt-6">
-              <button
+                type="button"
                 onClick={() => setCurrentView("public")}
-                className="text-xs text-slate-500 hover:text-slate-800 font-semibold"
+                className="text-xs font-semibold text-slate-400 hover:text-[#008766] transition-colors cursor-pointer"
               >
-                ← Back to Homepage
+                ProjectHub Home
               </button>
             </div>
+
+            {/* Main Auth Sub-View Switcher: Login vs Register vs Forgot */}
+            <div className="grid grid-cols-2 p-1 bg-slate-100/90 rounded-2xl mb-6 border border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => setAuthSubView("login")}
+                className={`py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  authSubView === "login"
+                    ? "bg-white text-[#0f2427] shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <LogIn className="w-3.5 h-3.5 text-[#008766]" />
+                <span>Sign In</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAuthSubView("register")}
+                className={`py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                  authSubView === "register"
+                    ? "bg-white text-[#0f2427] shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                <UserPlus className="w-3.5 h-3.5 text-[#008766]" />
+                <span>Create Account</span>
+              </button>
+            </div>
+
+            {/* Role Switcher (Segmented Control) */}
+            {authSubView !== "forgot" && (
+              <div className="bg-slate-50 p-1 rounded-2xl mb-6 flex items-center border border-slate-200/80">
+                <button
+                  type="button"
+                  onClick={() => setAuthRoleTab("student")}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    authRoleTab === "student" 
+                      ? "bg-white text-[#008766] shadow-xs border border-emerald-100" 
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span>🎓 Student</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthRoleTab("faculty")}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    authRoleTab === "faculty" 
+                      ? "bg-white text-amber-700 shadow-xs border border-amber-100" 
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span>👨‍🏫 Faculty</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAuthRoleTab("admin")}
+                  className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                    authRoleTab === "admin" 
+                      ? "bg-white text-indigo-700 shadow-xs border border-indigo-100" 
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span>🛡️ Admin</span>
+                </button>
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* SUB-VIEW 1: SIGN IN / LOGIN FORM */}
+            {/* ============================================================ */}
+            {authSubView === "login" && (
+              <div className="space-y-4">
+                {/* Title & Avatar */}
+                <div className="text-center mb-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-2.5 shadow-xs border transition-all ${
+                    authRoleTab === "student"
+                      ? "bg-[#e6f4f1] border-[#bfe5dc] text-[#008766]"
+                      : authRoleTab === "faculty"
+                      ? "bg-amber-50 border-amber-200 text-amber-600"
+                      : "bg-indigo-50 border-indigo-200 text-indigo-600"
+                  }`}>
+                    {authRoleTab === "student" ? "🎓" : authRoleTab === "faculty" ? "👨‍🏫" : "🛡️"}
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-[#0f2427] tracking-tight">
+                    {authRoleTab === "student" ? "Student" : authRoleTab === "faculty" ? "Faculty Guide" : "Administrator"} Sign In
+                  </h2>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleCustomLoginSubmit} className="space-y-3.5 pt-1">
+                  {/* Institutional Email */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Institutional Email</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="email"
+                        required
+                        placeholder={authRoleTab === "student" ? "aarav.sharma@projecthub.edu" : authRoleTab === "faculty" ? "arvind.verma@projecthub.edu" : "admin@projecthub.edu"}
+                        value={loginEmail}
+                        onChange={(e) => setLoginEmail(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008766]/20 focus:border-[#008766] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold text-slate-700">Password</label>
+                      <button
+                        type="button"
+                        onClick={() => setAuthSubView("forgot")}
+                        className="text-[11px] text-[#008766] hover:underline font-semibold cursor-pointer"
+                      >
+                        Forgot password?
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        placeholder="••••••••"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008766]/20 focus:border-[#008766] transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Remember Me */}
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="rounded border-slate-300 text-[#008766] focus:ring-[#008766]"
+                      />
+                      <span>Keep me signed in</span>
+                    </label>
+                    <span className="text-[11px] text-slate-400">256-bit SSL encrypted</span>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-[#008766] hover:bg-[#007054] text-white font-bold text-xs rounded-2xl shadow-md shadow-emerald-800/15 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 mt-2"
+                  >
+                    <span>Sign In & Open {authRoleTab === "student" ? "Student Portal" : authRoleTab === "faculty" ? "Faculty Hub" : "Admin Console"}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </form>
+
+                {/* Footer Switcher */}
+                <div className="text-center pt-2 border-t border-slate-100 text-xs text-slate-500">
+                  <span>Don't have an account? </span>
+                  <button
+                    type="button"
+                    onClick={() => setAuthSubView("register")}
+                    className="font-bold text-[#008766] hover:underline cursor-pointer"
+                  >
+                    Register here
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* SUB-VIEW 2: REGISTRATION FORM */}
+            {/* ============================================================ */}
+            {authSubView === "register" && (
+              <div className="space-y-4">
+                {/* Title & Avatar */}
+                <div className="text-center mb-4">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-2.5 shadow-xs border transition-all ${
+                    authRoleTab === "student"
+                      ? "bg-[#e6f4f1] border-[#bfe5dc] text-[#008766]"
+                      : authRoleTab === "faculty"
+                      ? "bg-amber-50 border-amber-200 text-amber-600"
+                      : "bg-indigo-50 border-indigo-200 text-indigo-600"
+                  }`}>
+                    {authRoleTab === "student" ? "🎓" : authRoleTab === "faculty" ? "👨‍🏫" : "🛡️"}
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-[#0f2427] tracking-tight">
+                    {authRoleTab === "student" ? "Student" : authRoleTab === "faculty" ? "Faculty Guide" : "Administrator"} Registration
+                  </h2>
+                </div>
+
+                <form onSubmit={handleRegisterSubmit} className="space-y-3">
+                  {/* Full Name */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <User className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        placeholder={authRoleTab === "student" ? "e.g., Kunal Verma" : authRoleTab === "faculty" ? "e.g., Prof. Arvind Verma" : "e.g., Dr. Rajesh Mehta"}
+                        value={regName}
+                        onChange={(e) => setRegName(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008766]/20 focus:border-[#008766] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 2-Column Row: Roll/ID + Dept */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        {authRoleTab === "student" ? "Roll Number" : "Staff / Faculty ID"}
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                          <Hash className="w-3.5 h-3.5" />
+                        </div>
+                        <input
+                          type="text"
+                          required
+                          placeholder={authRoleTab === "student" ? "CS2023-019" : "FAC-CSE-009"}
+                          value={regRoll}
+                          onChange={(e) => setRegRoll(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-8.5 pr-3 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008766]/20 focus:border-[#008766] transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Department</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                          <Building2 className="w-3.5 h-3.5" />
+                        </div>
+                        <select
+                          value={regDept}
+                          onChange={(e) => setRegDept(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-8.5 pr-3 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008766]/20 focus:border-[#008766] transition-all cursor-pointer"
+                        >
+                          <option value="Computer Science & Engineering">Computer Science</option>
+                          <option value="Artificial Intelligence & Data Science">AI & Data Science</option>
+                          <option value="Information Technology">Information Tech</option>
+                          <option value="Cybersecurity & Cryptography">Cybersecurity</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Institutional Email */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Institutional Email</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="email"
+                        required
+                        placeholder={authRoleTab === "student" ? "kunal.verma@projecthub.edu" : "anita.deshmukh@projecthub.edu"}
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008766]/20 focus:border-[#008766] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Create Password</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        placeholder="Create a strong password (min. 8 chars)"
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-10 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008766]/20 focus:border-[#008766] transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1 mt-1 text-[11px] text-slate-400">
+                      <ShieldCheck className="w-3 h-3 text-[#008766]" />
+                      <span>Encrypted academic profile security</span>
+                    </div>
+                  </div>
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    className="w-full py-3.5 bg-[#008766] hover:bg-[#007054] text-white font-bold text-xs rounded-2xl shadow-md shadow-emerald-800/15 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 mt-4"
+                  >
+                    <span>Register & Open {authRoleTab === "student" ? "Student Portal" : authRoleTab === "faculty" ? "Faculty Hub" : "Admin Console"}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </form>
+
+                {/* Footer Switcher */}
+                <div className="text-center pt-2 border-t border-slate-100 text-xs text-slate-500">
+                  <span>Already have an account? </span>
+                  <button
+                    type="button"
+                    onClick={() => setAuthSubView("login")}
+                    className="font-bold text-[#008766] hover:underline cursor-pointer"
+                  >
+                    Sign in here
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ============================================================ */}
+            {/* SUB-VIEW 3: FORGOT PASSWORD FORM */}
+            {/* ============================================================ */}
+            {authSubView === "forgot" && (
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center text-2xl mx-auto mb-2.5 shadow-xs">
+                    🔑
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-[#0f2427] tracking-tight">
+                    Reset Account Password
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5 max-w-xs mx-auto">
+                    Enter your university email address and we'll send you password recovery instructions.
+                  </p>
+                </div>
+
+                <form onSubmit={handleForgotSubmit} className="space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Institutional Email</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <input
+                        type="email"
+                        required
+                        placeholder="yourname@projecthub.edu"
+                        value={forgotEmail}
+                        onChange={(e) => setForgotEmail(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#008766]/20 focus:border-[#008766] transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-[#008766] hover:bg-[#007054] text-white font-bold text-xs rounded-2xl shadow-md shadow-emerald-800/15 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>Send Reset Instructions</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </form>
+
+                <div className="text-center pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setAuthSubView("login")}
+                    className="text-xs font-bold text-slate-500 hover:text-[#008766] inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3 h-3" />
+                    <span>Back to Sign In</span>
+                  </button>
+                </div>
+              </div>
+            )}
 
           </div>
         </main>
@@ -2282,14 +3064,14 @@ export default function ProjectHubApp() {
             {/* Current Active Session Info Card */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 mb-6 text-left flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#008766] text-white flex items-center justify-center font-bold text-base shrink-0">
-                {currentView === "student_portal" ? "🎓" : currentView === "faculty_hub" ? "👨‍🏫" : "🛡️"}
+                {currentUser?.role === "student" ? "🎓" : currentUser?.role === "faculty" ? "👨‍🏫" : "🛡️"}
               </div>
               <div className="truncate">
                 <div className="text-xs font-bold text-[#0f2427]">
-                  {currentView === "student_portal" ? "Aarav Sharma (Student Leader)" : currentView === "faculty_hub" ? "Prof. Arvind Verma (Faculty Guide)" : "Dr. Rajesh Mehta (Dean of Academics)"}
+                  {currentUser ? `${currentUser.name} (${currentUser.roleLabel})` : "Active User"}
                 </div>
                 <div className="text-[11px] text-slate-500">
-                  {currentView === "student_portal" ? "Computer Science • Team DevSphere" : currentView === "faculty_hub" ? "Supervising 2 Active Capstones" : "Academic Board Administration"}
+                  {currentUser ? `${currentUser.dept} • ${currentUser.email}` : "University Capstone Workspace"}
                 </div>
               </div>
             </div>
@@ -2305,11 +3087,7 @@ export default function ProjectHubApp() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setShowLogoutConfirm(false);
-                  setCurrentView("public");
-                  showToast("Logged out successfully. Have a great day!");
-                }}
+                onClick={handleLogoutConfirm}
                 className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-rose-600/20 cursor-pointer"
               >
                 Yes, Log Out
@@ -2329,11 +3107,10 @@ export default function ProjectHubApp() {
             <span>— Academic Collaboration Platform</span>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button onClick={() => setCurrentView("public")} className="hover:text-[#008766] transition-colors">Home</button>
-            <button onClick={() => setCurrentView("student_portal")} className="hover:text-[#008766] transition-colors">Student Portal</button>
-            <button onClick={() => setCurrentView("faculty_hub")} className="hover:text-[#008766] transition-colors">Faculty Hub</button>
-            <button onClick={() => setCurrentView("admin_console")} className="hover:text-[#008766] transition-colors">Admin Console</button>
+          <div className="flex flex-wrap items-center gap-4">
+            <button type="button" onClick={() => setCurrentView("public")} className="hover:text-[#008766] transition-colors cursor-pointer">Home</button>
+            <button type="button" onClick={() => setCurrentView("about")} className="hover:text-[#008766] transition-colors cursor-pointer">About Us</button>
+            <button type="button" onClick={() => setCurrentView("roles")} className="hover:text-[#008766] transition-colors cursor-pointer">Portals Hub</button>
           </div>
 
           <div>© 2026 ProjectHub Inc. All rights reserved.</div>
