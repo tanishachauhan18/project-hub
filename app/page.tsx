@@ -420,10 +420,12 @@ export default function ProjectHubApp() {
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0f2427] text-white px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 border border-emerald-500/30 animate-bounce">
-          <Sparkles className="w-5 h-5 text-emerald-400" />
-          <span className="text-sm font-medium">{toastMessage}</span>
-          <button onClick={() => setToastMessage(null)} className="ml-2 text-slate-400 hover:text-white">
+        <div className="fixed bottom-6 right-6 z-50 bg-[#0f2427]/95 backdrop-blur-md text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3.5 border border-emerald-500/40 snapflow-toast-enter">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+            <Sparkles className="w-4 h-4 animate-spin text-emerald-400" style={{ animationDuration: '4s' }} />
+          </div>
+          <span className="text-sm font-semibold tracking-wide">{toastMessage}</span>
+          <button onClick={() => setToastMessage(null)} className="ml-2 text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -532,21 +534,86 @@ export default function ProjectHubApp() {
       {/* 1. 🌐 PUBLIC LANDING PAGE (SNAPFLOW TEAL MINIMALIST STYLE) */}
       {/* ============================================================ */}
       {currentView === "public" && (
-        <main className="flex-1">
+        <main className="flex-1 snapflow-view-enter">
           {/* Hero Section */}
           <section className="snapflow-hero-bg pt-16 pb-20 px-4 sm:px-6 lg:px-8 border-b border-slate-100 text-center relative overflow-hidden">
-            <div className="max-w-4xl mx-auto">
-              
-              {/* Mint Badge */}
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#e6f4f1] border border-[#bfe5dc] text-[#008766] text-xs font-bold uppercase tracking-wider mb-6 shadow-xs animate-fade-in">
-                <Sparkles className="w-3.5 h-3.5" />
+            {/* Ambient Background Glowing Blobs */}
+            <div className="absolute -top-24 -left-20 w-96 h-96 bg-emerald-400/20 rounded-full blur-3xl pointer-events-none snapflow-ambient-orb-1" />
+            <div className="absolute top-1/4 -right-20 w-[420px] h-[420px] bg-teal-300/20 rounded-full blur-3xl pointer-events-none snapflow-ambient-orb-2" />
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-3/4 h-64 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none snapflow-ambient-pulse" />
+
+            {/* Floating Hero Badge 1 - Left */}
+            <div className="hidden lg:flex items-center gap-3.5 absolute top-24 left-6 xl:left-14 bg-white/90 backdrop-blur-md p-3.5 rounded-2xl border border-emerald-100/90 shadow-xl shadow-emerald-900/5 snapflow-float-slow select-none z-20 hover:scale-105 transition-transform duration-300">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#008766] to-emerald-400 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-800">IEEE Vault Verified</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium">SRS & Architecture Approved</p>
+              </div>
+            </div>
+
+            {/* Floating Hero Badge 2 - Right */}
+            <div className="hidden lg:flex items-center gap-3.5 absolute top-36 right-6 xl:right-14 bg-white/90 backdrop-blur-md p-3.5 rounded-2xl border border-emerald-100/90 shadow-xl shadow-emerald-900/5 snapflow-float-slow-reverse select-none z-20 hover:scale-105 transition-transform duration-300">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-500 flex items-center justify-center text-white shadow-md shadow-amber-600/20 shrink-0">
+                <Award className="w-5 h-5" />
+              </div>
+              <div className="text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-slate-800">Rubric Score 96/100</span>
+                  <span className="text-[10px] font-extrabold px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded">Grade A+</span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium">Approved with Distinction</p>
+              </div>
+            </div>
+
+            {/* Floating Hero Badge 3 - Bottom Left */}
+            <div className="hidden xl:flex items-center gap-3 absolute bottom-28 left-10 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-lg shadow-slate-900/5 snapflow-float-subtle select-none z-20 hover:scale-105 transition-transform duration-300">
+              <div className="flex -space-x-2">
+                <div className="w-7 h-7 rounded-full bg-emerald-600 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-xs">AS</div>
+                <div className="w-7 h-7 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-xs">RM</div>
+                <div className="w-7 h-7 rounded-full bg-slate-700 text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-xs">PK</div>
+              </div>
+              <div className="text-left">
+                <span className="text-xs font-bold text-slate-800 block leading-tight">3 Reviewers Online</span>
+                <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> Live Supervision
+                </span>
+              </div>
+            </div>
+
+            {/* Floating Hero Badge 4 - Bottom Right */}
+            <div className="hidden xl:flex items-center gap-3 absolute bottom-24 right-10 bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-lg shadow-slate-900/5 snapflow-float-subtle-delayed select-none z-20 hover:scale-105 transition-transform duration-300">
+              <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center shrink-0">
+                <Zap className="w-4 h-4 text-emerald-600 animate-pulse" />
+              </div>
+              <div className="text-left">
+                <span className="text-xs font-bold text-slate-800 block leading-tight">Milestone Burndown</span>
+                <div className="w-24 bg-slate-100 rounded-full h-1.5 mt-1 overflow-hidden">
+                  <div className="bg-[#008766] h-1.5 rounded-full snapflow-progress-fill" style={{ width: "80%" }}></div>
+                </div>
+              </div>
+            </div>
+
+            <div className="max-w-4xl mx-auto relative z-10">
+              {/* Mint Badge with live pulse dot & shimmer sweep */}
+              <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#e6f4f1] border border-[#bfe5dc] text-[#008766] text-xs font-bold uppercase tracking-wider mb-6 shadow-xs relative overflow-hidden group snapflow-badge-glow">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#008766]"></span>
+                </span>
+                <Sparkles className="w-3.5 h-3.5 text-[#008766]" />
                 <span>WELCOME TO PROJECT HUB · UNIFIED ACADEMIC OS</span>
+                <span className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/50 to-transparent skew-x-12 snapflow-badge-shimmer pointer-events-none"></span>
               </div>
 
               {/* Title */}
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#0f2427] tracking-tight leading-[1.15] mb-6">
                 Seamless solutions for <br className="hidden sm:inline" />
-                <span className="italic text-[#008766] font-serif">your academic growth</span>
+                <span className="italic font-serif snapflow-gradient-text">your academic growth</span>
               </h1>
 
               {/* Subhead */}
@@ -558,40 +625,43 @@ export default function ProjectHubApp() {
               <div className="flex flex-wrap items-center justify-center gap-3.5 mb-14">
                 <button
                   onClick={() => setCurrentView("student_portal")}
-                  className="bg-[#008766] hover:bg-[#007054] text-white px-7 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-md shadow-emerald-800/15 hover:shadow-lg flex items-center gap-2 group"
+                  className="bg-[#008766] hover:bg-[#007054] text-white px-7 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-md shadow-emerald-800/15 hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2 group cursor-pointer"
                 >
                   <span>Explore Student Portal</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <button
                   onClick={() => setShowTourModal(true)}
-                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-6 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-xs flex items-center gap-2"
+                  className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 px-6 py-3.5 rounded-2xl font-bold text-sm transition-all shadow-xs hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2 cursor-pointer"
                 >
                   <Play className="w-4 h-4 text-[#008766] fill-[#008766]" />
                   <span>Watch 2-Min Tour</span>
                 </button>
               </div>
 
-              {/* Video Tour Showcase Card */}
-              <div className="max-w-3xl mx-auto rounded-3xl p-3 bg-white/80 border border-slate-200/90 shadow-2xl backdrop-blur-sm relative group">
-                <div className="rounded-2xl bg-gradient-to-br from-[#0f2427] to-[#043328] p-8 sm:p-12 text-white relative overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
-                  
-                  {/* Decorative mesh */}
-                  <div className="absolute inset-0 bg-[radial-gradient(#008766_1px,transparent_1px)] [background-size:16px_16px] opacity-25"></div>
+              {/* Video Tour Showcase Card with ambient aura */}
+              <div className="relative max-w-3xl mx-auto group">
+                <div className="absolute -inset-1.5 bg-gradient-to-r from-emerald-500/20 via-teal-400/25 to-emerald-600/20 rounded-3xl blur-xl opacity-70 group-hover:opacity-100 transition duration-700 pointer-events-none"></div>
+                <div className="relative rounded-3xl p-3 bg-white/80 border border-slate-200/90 shadow-2xl backdrop-blur-sm group-hover:border-emerald-300 transition-all duration-300">
+                  <div className="rounded-2xl bg-gradient-to-br from-[#0f2427] to-[#043328] p-8 sm:p-12 text-white relative overflow-hidden flex flex-col items-center justify-center min-h-[260px]">
+                    
+                    {/* Decorative mesh with subtle breathing animation */}
+                    <div className="absolute inset-0 bg-[radial-gradient(#008766_1px,transparent_1px)] [background-size:16px_16px] opacity-25 snapflow-grid-anim"></div>
 
-                  {/* Pulsing Play Button */}
-                  <button
-                    onClick={() => setShowTourModal(true)}
-                    className="snapflow-play-btn w-16 h-16 rounded-full flex items-center justify-center mb-4 z-10 cursor-pointer"
-                    title="Play Tour"
-                  >
-                    <Play className="w-6 h-6 fill-current ml-0.5" />
-                  </button>
+                    {/* Pulsing Play Button */}
+                    <button
+                      onClick={() => setShowTourModal(true)}
+                      className="snapflow-play-btn w-16 h-16 rounded-full flex items-center justify-center mb-4 z-10 cursor-pointer"
+                      title="Play Tour"
+                    >
+                      <Play className="w-6 h-6 fill-current ml-0.5" />
+                    </button>
 
-                  <h2 className="text-xl font-extrabold z-10 mb-1">Watch Academic Workflow Tour</h2>
-                  <p className="text-xs text-emerald-200/80 z-10 max-w-md text-center">
-                    Discover how university departments evaluate capstone projects, verify code commits, and publish rubrics in less than 2 minutes.
-                  </p>
+                    <h2 className="text-xl font-extrabold z-10 mb-1">Watch Academic Workflow Tour</h2>
+                    <p className="text-xs text-emerald-200/80 z-10 max-w-md text-center">
+                      Discover how university departments evaluate capstone projects, verify code commits, and publish rubrics in less than 2 minutes.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -648,7 +718,7 @@ export default function ProjectHubApp() {
                     desc: "Standardized 100-point rubric scoring terminal with instant letter-grade (A+ to F) publishing."
                   }
                 ].map((card, idx) => (
-                  <div key={idx} className="snapflow-card p-6 rounded-2xl border border-slate-200/80 bg-white">
+                  <div key={idx} className="snapflow-card snapflow-card-glow p-6 rounded-2xl border border-slate-200/80 bg-white">
                     <div className="w-12 h-12 rounded-xl bg-[#e6f4f1] border border-[#bfe5dc] flex items-center justify-center mb-4">
                       {card.icon}
                     </div>
@@ -680,7 +750,7 @@ export default function ProjectHubApp() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 {/* 1. Student Card */}
-                <div className="bg-white rounded-3xl p-7 border border-slate-200/90 shadow-sm hover:border-[#008766] transition-all flex flex-col justify-between">
+                <div className="bg-white rounded-3xl p-7 border border-slate-200/90 shadow-sm hover:border-[#008766] snapflow-card-glow transition-all flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-12 h-12 rounded-2xl bg-[#e6f4f1] text-[#008766] flex items-center justify-center font-bold text-xl">
@@ -722,7 +792,7 @@ export default function ProjectHubApp() {
 
                   <button
                     onClick={() => setCurrentView("student_portal")}
-                    className="w-full py-2.5 bg-[#e6f4f1] hover:bg-[#008766] text-[#008766] hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-[#e6f4f1] hover:bg-[#008766] text-[#008766] hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Launch Student Portal</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -730,7 +800,7 @@ export default function ProjectHubApp() {
                 </div>
 
                 {/* 2. Faculty Card */}
-                <div className="bg-white rounded-3xl p-7 border border-slate-200/90 shadow-sm hover:border-[#008766] transition-all flex flex-col justify-between">
+                <div className="bg-white rounded-3xl p-7 border border-slate-200/90 shadow-sm hover:border-[#008766] snapflow-card-glow transition-all flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl">
@@ -772,7 +842,7 @@ export default function ProjectHubApp() {
 
                   <button
                     onClick={() => setCurrentView("faculty_hub")}
-                    className="w-full py-2.5 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Launch Faculty Hub</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -780,7 +850,7 @@ export default function ProjectHubApp() {
                 </div>
 
                 {/* 3. Admin Card */}
-                <div className="bg-white rounded-3xl p-7 border border-slate-200/90 shadow-sm hover:border-[#008766] transition-all flex flex-col justify-between">
+                <div className="bg-white rounded-3xl p-7 border border-slate-200/90 shadow-sm hover:border-[#008766] snapflow-card-glow transition-all flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-3 mb-5">
                       <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">
@@ -822,7 +892,7 @@ export default function ProjectHubApp() {
 
                   <button
                     onClick={() => setCurrentView("admin_console")}
-                    className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-800 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2"
+                    className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-800 hover:text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <span>Launch Admin Console</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -861,7 +931,7 @@ export default function ProjectHubApp() {
                   <div
                     key={idx}
                     onClick={item.action}
-                    className="bg-[#f8fafc] hover:bg-[#e6f4f1] border border-slate-200 hover:border-[#008766] p-5 rounded-2xl cursor-pointer transition-all group"
+                    className="bg-[#f8fafc] hover:bg-[#e6f4f1] border border-slate-200 hover:border-[#008766] p-5 rounded-2xl cursor-pointer transition-all group snapflow-card-glow"
                   >
                     <div className="text-xs font-extrabold text-[#008766] mb-2">{item.step}</div>
                     <h3 className="text-sm font-bold text-[#0f2427] group-hover:text-[#008766] mb-1 flex items-center justify-between">
@@ -886,13 +956,13 @@ export default function ProjectHubApp() {
               <div className="flex flex-wrap justify-center gap-3">
                 <button
                   onClick={() => handleDemoLogin("student")}
-                  className="bg-[#008766] hover:bg-emerald-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all"
+                  className="bg-[#008766] hover:bg-emerald-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-all cursor-pointer shadow-md hover:shadow-lg"
                 >
                   Student 1-Click Demo
                 </button>
                 <button
                   onClick={() => handleDemoLogin("faculty")}
-                  className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-5 py-2.5 rounded-xl border border-white/20 transition-all"
+                  className="bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-5 py-2.5 rounded-xl border border-white/20 transition-all cursor-pointer"
                 >
                   Faculty 1-Click Demo
                 </button>
@@ -906,7 +976,7 @@ export default function ProjectHubApp() {
       {/* 2. 🎓 STUDENT PORTAL VIEW (`student_portal`) */}
       {/* ============================================================ */}
       {currentView === "student_portal" && (
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 snapflow-view-enter">
           
           {/* Top Project Banner */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm mb-8">
@@ -1333,7 +1403,7 @@ export default function ProjectHubApp() {
       {/* 3. 👨‍🏫 FACULTY GUIDE HUB (`faculty_hub`) */}
       {/* ============================================================ */}
       {currentView === "faculty_hub" && (
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 snapflow-view-enter">
           
           {/* Faculty Header */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm mb-8">
@@ -1587,7 +1657,7 @@ export default function ProjectHubApp() {
       {/* 4. 🛡️ ADMINISTRATOR CONSOLE (`admin_console`) */}
       {/* ============================================================ */}
       {currentView === "admin_console" && (
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 snapflow-view-enter">
           
           {/* Admin Header */}
           <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-sm mb-8">
@@ -1740,7 +1810,7 @@ export default function ProjectHubApp() {
       {/* 5. 🔐 AUTHENTICATION VIEW (`auth`) */}
       {/* ============================================================ */}
       {currentView === "auth" && (
-        <main className="flex-1 flex items-center justify-center p-4 snapflow-hero-bg">
+        <main className="flex-1 flex items-center justify-center p-4 snapflow-hero-bg snapflow-view-enter">
           <div className="max-w-md w-full bg-white rounded-3xl p-8 border border-slate-200/90 shadow-2xl">
             
             {/* Header */}
@@ -1834,8 +1904,8 @@ export default function ProjectHubApp() {
       {/* 📹 TOUR MODAL */}
       {/* ============================================================ */}
       {showTourModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-lg w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 snapflow-backdrop-fade">
+          <div className="max-w-lg w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative snapflow-modal-enter">
             <button
               onClick={() => setShowTourModal(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700"
@@ -1899,8 +1969,8 @@ export default function ProjectHubApp() {
       {/* ✨ AI THESIS & CODE AUDIT MODAL */}
       {/* ============================================================ */}
       {showAiModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-xl w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 snapflow-backdrop-fade">
+          <div className="max-w-xl w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative snapflow-modal-enter">
             <button
               onClick={() => setShowAiModal(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700"
@@ -1958,8 +2028,8 @@ export default function ProjectHubApp() {
       {/* ➕ CREATE PROJECT MODAL (2-4 MEMBERS & GUIDE SELECTION) */}
       {/* ============================================================ */}
       {showNewProjectModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-lg w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 snapflow-backdrop-fade">
+          <div className="max-w-lg w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative snapflow-modal-enter">
             <button
               onClick={() => setShowNewProjectModal(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700"
@@ -2033,8 +2103,8 @@ export default function ProjectHubApp() {
       {/* 📁 UPLOAD DELIVERABLE MODAL */}
       {/* ============================================================ */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 snapflow-backdrop-fade">
+          <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative snapflow-modal-enter">
             <button
               onClick={() => setShowUploadModal(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700"
@@ -2114,8 +2184,8 @@ export default function ProjectHubApp() {
       {/* 📤 SUBMIT FINAL PROJECT MODAL */}
       {/* ============================================================ */}
       {showSubmitFinalModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 snapflow-backdrop-fade">
+          <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative snapflow-modal-enter">
             <button
               onClick={() => setShowSubmitFinalModal(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700"
@@ -2196,8 +2266,8 @@ export default function ProjectHubApp() {
       {/* 💻 COMMIT CODE MODAL */}
       {/* ============================================================ */}
       {showCommitModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 snapflow-backdrop-fade">
+          <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative snapflow-modal-enter">
             <button
               onClick={() => setShowCommitModal(false)}
               className="absolute top-5 right-5 text-slate-400 hover:text-slate-700"
@@ -2257,8 +2327,8 @@ export default function ProjectHubApp() {
       {/* 🚪 LOGOUT CONFIRMATION MODAL */}
       {/* ============================================================ */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative text-center">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 snapflow-backdrop-fade">
+          <div className="max-w-md w-full bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl relative text-center snapflow-modal-enter">
             
             {/* Close Button */}
             <button
