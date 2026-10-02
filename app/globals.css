@@ -126,3 +126,437 @@ body {
   background: #94a3b8;
 }
 
+/* ============================================================ */
+/* 🌟 MODERN ANIMATIONS & MICRO-INTERACTIONS                   */
+/* ============================================================ */
+
+/* 1. Floating Elements */
+@keyframes floatSlow {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(1deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes floatSlowReverse {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(12px) rotate(-1.5deg);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes floatSubtle {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes floatSubtleDelayed {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(7px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.snapflow-float-slow {
+  animation: floatSlow 6.5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.snapflow-float-slow-reverse {
+  animation: floatSlowReverse 7.5s ease-in-out infinite;
+  animation-delay: 0.8s;
+  will-change: transform;
+}
+
+.snapflow-float-subtle {
+  animation: floatSubtle 5s ease-in-out infinite;
+  will-change: transform;
+}
+
+.snapflow-float-subtle-delayed {
+  animation: floatSubtleDelayed 5.8s ease-in-out infinite;
+  animation-delay: 1.2s;
+  will-change: transform;
+}
+
+/* 2. Ambient Glow & Organic Blobs */
+@keyframes ambientGlow1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+    opacity: 0.45;
+  }
+  33% {
+    transform: translate(25px, -20px) scale(1.1);
+    opacity: 0.7;
+  }
+  66% {
+    transform: translate(-15px, 18px) scale(0.95);
+    opacity: 0.5;
+  }
+}
+
+@keyframes ambientGlow2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate(-30px, -25px) scale(1.15);
+    opacity: 0.65;
+  }
+}
+
+@keyframes ambientPulseSpot {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateX(-50%) scale(1.08);
+    opacity: 0.55;
+  }
+}
+
+.snapflow-ambient-orb-1 {
+  animation: ambientGlow1 14s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.snapflow-ambient-orb-2 {
+  animation: ambientGlow2 16s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.snapflow-ambient-pulse {
+  animation: ambientPulseSpot 5s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+/* 3. Gradient Flow & Shimmer */
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.snapflow-gradient-text {
+  background: linear-gradient(135deg, #008766 0%, #10b981 40%, #005943 70%, #008766 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientFlow 7s ease infinite;
+}
+
+/* 4. Badge Shimmer & Pulse */
+@keyframes badgeSweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  40%, 100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+.snapflow-badge-shimmer {
+  animation: badgeSweep 4.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.snapflow-badge-glow {
+  box-shadow: 0 0 15px -2px rgba(0, 135, 102, 0.18);
+  transition: all 0.3s ease;
+}
+
+.snapflow-badge-glow:hover {
+  box-shadow: 0 0 20px 0 rgba(0, 135, 102, 0.3);
+  transform: translateY(-1px);
+}
+
+/* 5. Dark Mesh Grid Shimmer */
+@keyframes gridBreathing {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.02);
+  }
+}
+
+.snapflow-grid-anim {
+  animation: gridBreathing 6s ease-in-out infinite;
+}
+
+/* 6. Card Hover Glow & Elevation */
+.snapflow-card-glow {
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.snapflow-card-glow:hover {
+  transform: translateY(-4px);
+  border-color: #a7dfd2;
+  box-shadow: 
+    0 14px 30px -6px rgba(0, 135, 102, 0.12),
+    0 2px 8px -2px rgba(15, 36, 39, 0.04);
+}
+
+/* 7. Modal Pop-In & Backdrop Fade */
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes backdropFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.snapflow-modal-enter {
+  animation: modalPop 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.snapflow-backdrop-fade {
+  animation: backdropFade 0.22s ease-out forwards;
+}
+
+/* 8. Toast Slide-In with Spring */
+@keyframes toastSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.92);
+  }
+  70% {
+    transform: translateY(-3px) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.snapflow-toast-enter {
+  animation: toastSlide 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 9. View Transition Fade & Rise */
+@keyframes viewEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.snapflow-view-enter {
+  animation: viewEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 10. Smooth Progress Bar Fill */
+.snapflow-progress-fill {
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .snapflow-float-slow,
+  .snapflow-float-slow-reverse,
+  .snapflow-float-subtle,
+  .snapflow-float-subtle-delayed,
+  .snapflow-ambient-orb-1,
+  .snapflow-ambient-orb-2,
+  .snapflow-ambient-pulse,
+  .snapflow-gradient-text,
+  .snapflow-badge-shimmer,
+  .snapflow-grid-anim,
+  .snapflow-modal-enter,
+  .snapflow-toast-enter,
+  .snapflow-view-enter {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ============================================================ */
+/* 📱 RESPONSIVE & MOBILE/TABLET UTILITIES                      */
+/* ============================================================ */
+
+/* Global HTML Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Explicit smooth scroll container utility */
+.smooth-scroll,
+.overflow-y-auto,
+.overflow-x-auto {
+  scroll-behavior: smooth;
+}
+
+/* Sleek modern custom scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.6);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 135, 102, 0.28);
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 135, 102, 0.55);
+}
+
+/* Firefox thin scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 135, 102, 0.3) rgba(241, 245, 249, 0.5);
+}
+
+/* Hide scrollbars on tab lists while keeping smooth scrolling */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent unwanted horizontal viewport shift on mobile */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Touch optimization for mobile taps */
+@media (hover: none) and (pointer: coarse) {
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+}
+
+/* Safe area bottom padding for iPhone and mobile navbars */
+.safe-pb {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+/* Respect reduced motion for scrolling */
+@media (prefers-reduced-motion: reduce) {
+  html, .smooth-scroll, .overflow-y-auto, .overflow-x-auto {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================ */
+/* ⚡ PRELOADER / OPENING ANIMATIONS                            */
+/* ============================================================ */
+@keyframes spinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes spinReverseSlow {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes loaderPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.03);
+  }
+}
+
+.loader-spin-slow {
+  animation: spinSlow 4s linear infinite;
+  will-change: transform;
+}
+
+.loader-spin-reverse {
+  animation: spinReverseSlow 2.5s linear infinite;
+  will-change: transform;
+}
+
+.loader-pulse-glow {
+  animation: loaderPulse 2.4s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.loader-logo-float {
+  animation: logoFloat 2.6s ease-in-out infinite;
+  will-change: transform;
+}
+
+
+
