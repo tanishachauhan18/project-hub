@@ -45,3 +45,20 @@ def contact():
         return redirect(url_for('public.contact'))
         
     return render_template('public/contact.html')
+
+
+@public_bp.route('/join/<invite_code>')
+def join_invite_redirect(invite_code):
+    from flask import session
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        if user and user.role == 'student':
+            return redirect(url_for('student.join_project', invite_code=invite_code))
+        else:
+            flash('You are currently signed in as Faculty or Admin. Please switch to a Student account to join this project team.', 'warning')
+            return redirect(url_for('public.index'))
+    else:
+        session['pending_invite'] = invite_code
+        flash('You received an invite to join a project! Please sign in or create an account to collaborate.', 'info')
+        return redirect(url_for('auth.login'))
+

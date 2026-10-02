@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Join Team – {{ project.title }} | ProjectHub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-lg-8 col-xl-7">
+    
+    <!-- Invitation Card -->
+    <div class="ph-card bg-white shadow-lg rounded-4 overflow-hidden border-0">
+      <!-- Header Banner -->
+      <div class="p-4 p-md-5 text-white position-relative" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #2563eb 100%);">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+          <span class="badge bg-primary px-3 py-1"><i class="fas fa-layer-group me-1"></i> {{ project.domain }}</span>
+          <span class="badge bg-white bg-opacity-20 text-white"><i class="fas fa-code-branch me-1"></i> Team Collaboration Invite</span>
+        </div>
+
+        <h2 class="display-6 fw-bold mb-2 text-white">{{ project.title }}</h2>
+        <p class="text-white-50 small mb-0">{{ project.abstract }}</p>
+      </div>
+
+      <!-- Card Body -->
+      <div class="p-4 p-md-5">
+        
+        <!-- Project Summary Grid -->
+        <div class="row g-3 mb-4">
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <div class="text-muted small fw-semibold text-uppercase mb-1"><i class="fas fa-crown text-warning me-1"></i> Project Leader</div>
+              <div class="fw-bold text-navy">{{ project.creator.full_name }}</div>
+              <small class="text-muted">{{ project.creator.department }}</small>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <div class="text-muted small fw-semibold text-uppercase mb-1"><i class="fas fa-chalkboard-teacher text-primary me-1"></i> Faculty Supervisor</div>
+              <div class="fw-bold text-navy">{{ project.faculty_guide.full_name if project.faculty_guide else 'Assigned Guide' }}</div>
+              <small class="text-muted">{{ project.faculty_guide.department if project.faculty_guide else 'Pending Assignment' }}</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tech Stack -->
+        <div class="mb-4">
+          <h6 class="fw-bold text-navy small text-uppercase mb-2"><i class="fas fa-cubes text-primary me-1"></i> Technology Stack & Tools</h6>
+          <div class="d-flex flex-wrap gap-2">
+            {% for tech in project.tech_stack.split(',') %}
+              <span class="badge bg-light text-dark border px-3 py-2 fw-medium"><i class="fas fa-check-circle text-success me-1"></i> {{ tech.strip() }}</span>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Existing Team Members -->
+        <div class="mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold text-navy small text-uppercase mb-0"><i class="fas fa-users text-primary me-1"></i> Current Team Members ({{ project.members | length }})</h6>
+            <span class="badge bg-primary-subtle text-primary">{{ project.members | length }} Collaborator{{ 's' if project.members|length > 1 else '' }}</span>
+          </div>
+          
+          <div class="row g-2">
+            {% for m in project.members %}
+              <div class="col-md-6">
+                <div class="d-flex align-items-center gap-2 p-2 border rounded-3 bg-white">
+                  <div class="user-avatar-circle" style="width: 34px; height: 34px; font-size: 0.85rem;">
+                    {{ m.user.full_name[0] }}
+                  </div>
+                  <div class="text-truncate">
+                    <div class="fw-bold small text-navy text-truncate">{{ m.user.full_name }}</div>
+                    <small class="text-muted" style="font-size: 0.72rem;">{{ m.role_in_team }}</small>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Join Form -->
+        <form method="POST" action="{{ url_for('student.join_project_confirm', invite_code=project.invite_code) }}">
+          <div class="mb-4">
+            <label class="form-label fw-bold text-navy">Select Your Responsibility / Role in this Team <span class="text-danger">*</span></label>
+            <select name="role_in_team" class="form-select form-select-lg" required>
+              <option value="Frontend Developer (React / UI/UX)">Frontend Developer (React / UI/UX)</option>
+              <option value="Backend Engineer (Python / API / SQL)">Backend Engineer (Python / API / SQL)</option>
+              <option value="Full Stack Developer">Full Stack Developer</option>
+              <option value="AI / ML Engineer & Data Pipeline">AI / ML Engineer & Data Pipeline</option>
+              <option value="DevOps & Cloud Infrastructure">DevOps & Cloud Infrastructure</option>
+              <option value="QA & Security Testing Lead">QA & Security Testing Lead</option>
+              <option value="Technical Documentation & SRS Lead">Technical Documentation & SRS Lead</option>
+              <option value="Research & Algorithm Specialist">Research & Algorithm Specialist</option>
+            </select>
+            <div class="form-text">Your role will be displayed in the team directory and commit logs.</div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary-ph btn-lg py-3 justify-content-center shadow-sm">
+              <i class="fas fa-user-plus me-2"></i> Join Team & Launch Project Workspace 🚀
+            </button>
+            <a href="{{ url_for('student.dashboard') }}" class="btn btn-link text-muted text-center text-decoration-none">
+              Cancel & Return to Dashboard
+            </a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,8 +1,15 @@
 import os
+import io
+import zipfile
+import secrets
 from datetime import datetime
 from werkzeug.utils import secure_filename
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app, send_from_directory, abort
-from app.models import db, User, Project, ProjectMember, Milestone, ProjectFile, CodeSnippet, Discussion, Feedback, Notification, Evaluation
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app, send_from_directory, abort, send_file, jsonify
+from app.models import (
+    db, User, Project, ProjectMember, Milestone, ProjectFile, 
+    CodeSnippet, Discussion, Feedback, Notification, Evaluation,
+    ProjectIssue, IssueComment, ProjectPullRequest, ProjectActivity
+)
 from app import role_required
 
 student_bp = Blueprint('student', __name__)
@@ -86,6 +93,7 @@ def create_project():
                                    faculty_guides=faculty_guides)
             
         # Create Project Record
+        invite_code = f"hub_{secrets.token_urlsafe(8)}"
         new_project = Project(
             title=title,
             abstract=abstract,
@@ -96,7 +104,8 @@ def create_project():
             status='guide_pending',
             progress_percent=0,
             created_by_id=user_id,
-            faculty_guide_id=int(faculty_guide_id)
+            faculty_guide_id=int(faculty_guide_id),
+            invite_code=invite_code
         )
         db.session.add(new_project)
         db.session.flush()  # to get new_project.id
@@ -109,8 +118,17 @@ def create_project():
             status='joined'
         )
         db.session.add(leader_member)
+
+        # Log project creation activity
+        activity = ProjectActivity(
+            project_id=new_project.id,
+            user_id=user_id,
+            activity_type='member_joined',
+            title=f"{current_student.full_name} created project and initiated workspace"
+        )
+        db.session.add(activity)
         
-        # Add selected team members (1 to 3 additional members to make 2 to 4 total)
+        # Add selected team members if chosen directly
         member_ids = request.form.getlist('team_members')
         member_roles = request.form.getlist('member_roles')
         
@@ -153,6 +171,33 @@ def create_project():
                 status='pending'
             )
             db.session.add(m)
+
+        # Create initial README.md code file
+        readme_content = f"""# {title}
+
+> {abstract}
+
+## 🚀 Tech Stack
+`{tech_stack}`
+
+## 👥 Team
+- **Project Lead:** {current_student.full_name} ({current_student.department})
+
+## 📌 Getting Started
+1. Clone or open files from this repository.
+2. Collaborate on branches and submit Pull Requests.
+3. Track deliverables in the Milestones & Issues tab.
+"""
+        init_readme = CodeSnippet(
+            project_id=new_project.id,
+            author_id=user_id,
+            file_name="README.md",
+            language="markdown",
+            code_content=readme_content,
+            commit_message="Initial repository commit with project documentation",
+            branch="main"
+        )
+        db.session.add(init_readme)
             
         # Notify Selected Faculty Guide
         guide = User.query.get(int(faculty_guide_id))
@@ -174,6 +219,106 @@ def create_project():
                            available_students=available_students,
                            faculty_guides=faculty_guides)
 
+# ==========================================================
+# SHAREABLE INVITE & JOIN LINK
+# ==========================================================
+@student_bp.route('/join/<invite_code>')
+def join_project(invite_code):
+    user_id = session['user_id']
+    current_student = User.query.get(user_id)
+    
+    project = Project.query.filter_by(invite_code=invite_code).first()
+    if not project:
+        # Fallback check if it was project ID
+        if invite_code.isdigit():
+            project = Project.query.get(int(invite_code))
+            
+    if not project:
+        flash('Invalid or expired project collaboration link.', 'danger')
+        return redirect(url_for('student.dashboard'))
+        
+    # Check if user is already a member
+    is_member = ProjectMember.query.filter_by(project_id=project.id, user_id=user_id).first()
+    if is_member:
+        flash(f'You are already a collaborating member of "{project.title}". Welcome back!', 'info')
+        return redirect(url_for('student.workspace', project_id=project.id))
+        
+    return render_template('student/join_project.html',
+                           project=project,
+                           current_student=current_student)
+
+@student_bp.route('/join/<invite_code>/confirm', methods=['POST'])
+def join_project_confirm(invite_code):
+    user_id = session['user_id']
+    current_student = User.query.get(user_id)
+    
+    project = Project.query.filter_by(invite_code=invite_code).first()
+    if not project and invite_code.isdigit():
+        project = Project.query.get(int(invite_code))
+        
+    if not project:
+        flash('Project not found or link has expired.', 'danger')
+        return redirect(url_for('student.dashboard'))
+        
+    # Check if already joined
+    existing = ProjectMember.query.filter_by(project_id=project.id, user_id=user_id).first()
+    if existing:
+        flash('You are already part of this team.', 'info')
+        return redirect(url_for('student.workspace', project_id=project.id))
+        
+    role_in_team = request.form.get('role_in_team', 'Developer & Research').strip()
+    if not role_in_team:
+        role_in_team = 'Developer & Research'
+        
+    # Create membership
+    member = ProjectMember(
+        project_id=project.id,
+        user_id=user_id,
+        role_in_team=role_in_team,
+        status='joined'
+    )
+    db.session.add(member)
+    
+    # Log activity
+    activity = ProjectActivity(
+        project_id=project.id,
+        user_id=user_id,
+        activity_type='member_joined',
+        title=f"{current_student.full_name} joined the team as {role_in_team}",
+        details=f"Joined via shareable invitation link"
+    )
+    db.session.add(activity)
+    
+    # Notify team leader
+    notif = Notification(
+        user_id=project.created_by_id,
+        title="New Teammate Joined via Link",
+        message=f"{current_student.full_name} joined '{project.title}' as {role_in_team}.",
+        link=url_for('student.workspace', project_id=project.id),
+        type="success"
+    )
+    db.session.add(notif)
+    
+    db.session.commit()
+    flash(f'🎉 Welcome to the team! You have successfully joined "{project.title}" as {role_in_team}.', 'success')
+    return redirect(url_for('student.workspace', project_id=project.id))
+
+@student_bp.route('/workspace/<int:project_id>/invite/regenerate', methods=['POST'])
+def regenerate_invite_code(project_id):
+    user_id = session['user_id']
+    project = Project.query.get_or_404(project_id)
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    project.invite_code = f"hub_{secrets.token_urlsafe(8)}"
+    db.session.commit()
+    flash('New invite link generated! Old links will no longer grant access.', 'success')
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='team'))
+
+# ==========================================================
+# WORKSPACE & CODE STUDIO
+# ==========================================================
 @student_bp.route('/workspace/<int:project_id>')
 def workspace(project_id):
     user_id = session['user_id']
@@ -184,16 +329,425 @@ def workspace(project_id):
         return redirect(url_for('student.projects'))
         
     project = Project.query.get_or_404(project_id)
+    project.ensure_invite_code()
     project.update_progress()
     db.session.commit()
     
     evaluation = Evaluation.query.filter_by(project_id=project.id).first()
     
+    # Generate full invite link
+    invite_url = request.host_url.rstrip('/') + url_for('public.join_invite_redirect', invite_code=project.invite_code)
+    
+    # Sort snippets so README.md is prominent if available
+    snippets = sorted(project.code_snippets, key=lambda s: (0 if s.file_name.lower() == 'readme.md' else 1, s.created_at), reverse=False)
+    
     return render_template('student/workspace.html',
                            project=project,
                            membership=membership,
-                           evaluation=evaluation)
+                           evaluation=evaluation,
+                           invite_url=invite_url,
+                           snippets=snippets)
 
+# ==========================================================
+# GITHUB CODE STUDIO: SAVE, COMMIT, DELETE, DOWNLOAD ZIP
+# ==========================================================
+@student_bp.route('/workspace/<int:project_id>/code/save', methods=['POST'])
+def save_code_file(project_id):
+    user_id = session['user_id']
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    user = User.query.get(user_id)
+    file_name = request.form.get('file_name', '').strip()
+    language = request.form.get('language', 'python')
+    code_content = request.form.get('code_content', '')
+    commit_message = request.form.get('commit_message', 'Update code').strip()
+    branch = request.form.get('branch', 'main').strip() or 'main'
+    
+    if not file_name:
+        flash('Please enter a valid file name (e.g. app.py, main.js).', 'danger')
+        return redirect(url_for('student.workspace', project_id=project_id, _anchor='code'))
+        
+    if not commit_message:
+        commit_message = f"Update {file_name}"
+        
+    # Check if a snippet with the same file_name exists
+    existing_snippet = CodeSnippet.query.filter_by(project_id=project_id, file_name=file_name, branch=branch).first()
+    if existing_snippet:
+        existing_snippet.code_content = code_content
+        existing_snippet.language = language
+        existing_snippet.commit_message = commit_message
+        existing_snippet.author_id = user_id
+        existing_snippet.updated_at = datetime.utcnow()
+    else:
+        new_snippet = CodeSnippet(
+            project_id=project_id,
+            author_id=user_id,
+            file_name=file_name,
+            language=language,
+            code_content=code_content,
+            commit_message=commit_message,
+            branch=branch
+        )
+        db.session.add(new_snippet)
+        
+    # Record commit activity
+    activity = ProjectActivity(
+        project_id=project_id,
+        user_id=user_id,
+        activity_type='commit',
+        title=f"{user.full_name} committed '{file_name}' to {branch}",
+        details=commit_message
+    )
+    db.session.add(activity)
+    
+    project = Project.query.get(project_id)
+    project.updated_at = datetime.utcnow()
+    
+    db.session.commit()
+    flash(f'File "{file_name}" committed successfully to branch "{branch}"!', 'success')
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='code'))
+
+@student_bp.route('/workspace/<int:project_id>/code/delete/<int:snippet_id>', methods=['POST'])
+def delete_code_file(project_id, snippet_id):
+    user_id = session['user_id']
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    user = User.query.get(user_id)
+    snippet = CodeSnippet.query.filter_by(id=snippet_id, project_id=project_id).first_or_404()
+    file_name = snippet.file_name
+    
+    db.session.delete(snippet)
+    
+    activity = ProjectActivity(
+        project_id=project_id,
+        user_id=user_id,
+        activity_type='commit',
+        title=f"{user.full_name} removed file '{file_name}' from repository"
+    )
+    db.session.add(activity)
+    db.session.commit()
+    
+    flash(f'File "{file_name}" deleted from repository.', 'info')
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='code'))
+
+@student_bp.route('/workspace/<int:project_id>/code/download-zip')
+def download_code_zip(project_id):
+    user_id = session['user_id']
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    project = Project.query.get_or_404(project_id)
+    
+    # Create in-memory zip file
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for snippet in project.code_snippets:
+            zip_file.writestr(snippet.file_name, snippet.code_content)
+            
+        # Add project info file if no README
+        if not any(s.file_name.lower() == 'readme.md' for s in project.code_snippets):
+            info_text = f"Project: {project.title}\nDomain: {project.domain}\nTech Stack: {project.tech_stack}\n\nAbstract:\n{project.abstract}\n"
+            zip_file.writestr("PROJECT_INFO.txt", info_text)
+            
+    zip_buffer.seek(0)
+    clean_title = "".join(c for c in project.title if c.isalnum() or c in (' ', '_', '-')).rstrip()
+    zip_name = f"{clean_title.replace(' ', '_').lower()[:30]}_codebase.zip"
+    
+    return send_file(
+        zip_buffer,
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name=zip_name
+    )
+
+# ==========================================================
+# GITHUB ISSUES & BUG TRACKER
+# ==========================================================
+@student_bp.route('/workspace/<int:project_id>/issues/create', methods=['POST'])
+def create_issue(project_id):
+    user_id = session['user_id']
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    user = User.query.get(user_id)
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    label = request.form.get('label', 'enhancement')
+    priority = request.form.get('priority', 'medium')
+    assigned_to_id = request.form.get('assigned_to_id')
+    
+    if not title:
+        flash('Issue title cannot be empty.', 'danger')
+        return redirect(url_for('student.workspace', project_id=project_id, _anchor='issues'))
+        
+    assigned_user_id = int(assigned_to_id) if assigned_to_id and assigned_to_id.isdigit() else None
+    
+    issue = ProjectIssue(
+        project_id=project_id,
+        created_by_id=user_id,
+        assigned_to_id=assigned_user_id,
+        title=title,
+        description=description,
+        label=label,
+        priority=priority,
+        status='open'
+    )
+    db.session.add(issue)
+    db.session.flush()
+    
+    # Log activity
+    activity = ProjectActivity(
+        project_id=project_id,
+        user_id=user_id,
+        activity_type='issue_created',
+        title=f"{user.full_name} opened Issue #{issue.id}: {title}",
+        details=description
+    )
+    db.session.add(activity)
+    
+    # Notify assignee if selected
+    if assigned_user_id and assigned_user_id != user_id:
+        notif = Notification(
+            user_id=assigned_user_id,
+            title=f"Assigned to Issue #{issue.id}",
+            message=f"{user.full_name} assigned you to issue: '{title}' in project workspace.",
+            link=url_for('student.workspace', project_id=project_id),
+            type="info"
+        )
+        db.session.add(notif)
+        
+    db.session.commit()
+    flash(f'Issue #{issue.id} created successfully!', 'success')
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='issues'))
+
+@student_bp.route('/workspace/<int:project_id>/issues/<int:issue_id>/toggle', methods=['POST'])
+def toggle_issue(project_id, issue_id):
+    user_id = session['user_id']
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    user = User.query.get(user_id)
+    issue = ProjectIssue.query.filter_by(id=issue_id, project_id=project_id).first_or_404()
+    
+    if issue.status == 'open':
+        issue.status = 'closed'
+        issue.closed_at = datetime.utcnow()
+        action_msg = "closed"
+        act_type = "issue_closed"
+    else:
+        issue.status = 'open'
+        issue.closed_at = None
+        action_msg = "reopened"
+        act_type = "issue_created"
+        
+    activity = ProjectActivity(
+        project_id=project_id,
+        user_id=user_id,
+        activity_type=act_type,
+        title=f"{user.full_name} {action_msg} Issue #{issue.id}: {issue.title}"
+    )
+    db.session.add(activity)
+    db.session.commit()
+    
+    flash(f'Issue #{issue.id} marked as {issue.status.upper()}.', 'info')
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='issues'))
+
+@student_bp.route('/workspace/<int:project_id>/issues/<int:issue_id>/comment', methods=['POST'])
+def add_issue_comment(project_id, issue_id):
+    user_id = session['user_id']
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    comment_text = request.form.get('comment', '').strip()
+    if comment_text:
+        comment = IssueComment(
+            issue_id=issue_id,
+            user_id=user_id,
+            comment=comment_text
+        )
+        db.session.add(comment)
+        db.session.commit()
+        flash('Comment posted to issue.', 'success')
+        
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='issues'))
+
+# ==========================================================
+# GITHUB PULL REQUESTS & CODE REVIEWS
+# ==========================================================
+@student_bp.route('/workspace/<int:project_id>/pr/create', methods=['POST'])
+def create_pull_request(project_id):
+    user_id = session['user_id']
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    user = User.query.get(user_id)
+    title = request.form.get('title', '').strip()
+    description = request.form.get('description', '').strip()
+    source_branch = request.form.get('source_branch', 'feature/update').strip()
+    target_branch = request.form.get('target_branch', 'main').strip()
+    
+    if not title:
+        flash('Pull Request title cannot be empty.', 'danger')
+        return redirect(url_for('student.workspace', project_id=project_id, _anchor='pull-requests'))
+        
+    pr = ProjectPullRequest(
+        project_id=project_id,
+        author_id=user_id,
+        title=title,
+        description=description,
+        source_branch=source_branch,
+        target_branch=target_branch,
+        status='open'
+    )
+    db.session.add(pr)
+    db.session.flush()
+    
+    activity = ProjectActivity(
+        project_id=project_id,
+        user_id=user_id,
+        activity_type='pr_opened',
+        title=f"{user.full_name} opened Pull Request #{pr.id}: {title} ({source_branch} → {target_branch})"
+    )
+    db.session.add(activity)
+    
+    project = Project.query.get(project_id)
+    if project.created_by_id != user_id:
+        notif = Notification(
+            user_id=project.created_by_id,
+            title=f"New Pull Request #{pr.id} Ready for Review",
+            message=f"{user.full_name} opened PR '{title}'. Review diff and merge when ready.",
+            link=url_for('student.workspace', project_id=project_id),
+            type="info"
+        )
+        db.session.add(notif)
+        
+    db.session.commit()
+    flash(f'Pull Request #{pr.id} submitted for review!', 'success')
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='pull-requests'))
+
+@student_bp.route('/workspace/<int:project_id>/pr/<int:pr_id>/merge', methods=['POST'])
+def merge_pull_request(project_id, pr_id):
+    user_id = session['user_id']
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    user = User.query.get(user_id)
+    pr = ProjectPullRequest.query.filter_by(id=pr_id, project_id=project_id).first_or_404()
+    
+    pr.status = 'merged'
+    pr.merged_by_id = user_id
+    pr.merged_at = datetime.utcnow()
+    
+    activity = ProjectActivity(
+        project_id=project_id,
+        user_id=user_id,
+        activity_type='pr_merged',
+        title=f"{user.full_name} merged Pull Request #{pr.id}: {pr.title} into {pr.target_branch}"
+    )
+    db.session.add(activity)
+    
+    # Notify PR Author
+    if pr.author_id != user_id:
+        notif = Notification(
+            user_id=pr.author_id,
+            title=f"Pull Request #{pr.id} Merged!",
+            message=f"{user.full_name} merged your PR '{pr.title}' into branch '{pr.target_branch}'.",
+            link=url_for('student.workspace', project_id=project_id),
+            type="success"
+        )
+        db.session.add(notif)
+        
+    db.session.commit()
+    flash(f'Pull Request #{pr.id} merged into {pr.target_branch}!', 'success')
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='pull-requests'))
+
+@student_bp.route('/workspace/<int:project_id>/pr/<int:pr_id>/close', methods=['POST'])
+def close_pull_request(project_id, pr_id):
+    user_id = session['user_id']
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    pr = ProjectPullRequest.query.filter_by(id=pr_id, project_id=project_id).first_or_404()
+    pr.status = 'closed'
+    db.session.commit()
+    flash(f'Pull Request #{pr.id} closed without merging.', 'info')
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='pull-requests'))
+
+# ==========================================================
+# TEAM MANAGEMENT (ROLE CHANGES & REMOVALS)
+# ==========================================================
+@student_bp.route('/workspace/<int:project_id>/team/change-role/<int:member_id>', methods=['POST'])
+def change_team_role(project_id, member_id):
+    user_id = session['user_id']
+    project = Project.query.get_or_404(project_id)
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    member = ProjectMember.query.filter_by(id=member_id, project_id=project_id).first_or_404()
+    
+    # Only leader or member themselves can change role
+    if project.created_by_id != user_id and member.user_id != user_id:
+        flash('Only Team Leader or the member themselves can update roles.', 'danger')
+        return redirect(url_for('student.workspace', project_id=project_id, _anchor='team'))
+        
+    new_role = request.form.get('role_in_team', '').strip()
+    if new_role:
+        member.role_in_team = new_role
+        db.session.commit()
+        flash(f"Updated {member.user.full_name}'s role to '{new_role}'.", 'success')
+        
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='team'))
+
+@student_bp.route('/workspace/<int:project_id>/team/remove/<int:member_id>', methods=['POST'])
+def remove_team_member(project_id, member_id):
+    user_id = session['user_id']
+    project = Project.query.get_or_404(project_id)
+    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
+    if not membership:
+        abort(403)
+        
+    member = ProjectMember.query.filter_by(id=member_id, project_id=project_id).first_or_404()
+    
+    # Prevent removing team leader
+    if member.user_id == project.created_by_id:
+        flash('The Project Leader cannot be removed.', 'danger')
+        return redirect(url_for('student.workspace', project_id=project_id, _anchor='team'))
+        
+    # Only creator or member leaving
+    if project.created_by_id != user_id and member.user_id != user_id:
+        flash('Unauthorized to remove this member.', 'danger')
+        return redirect(url_for('student.workspace', project_id=project_id, _anchor='team'))
+        
+    name = member.user.full_name
+    db.session.delete(member)
+    
+    activity = ProjectActivity(
+        project_id=project_id,
+        user_id=user_id,
+        activity_type='member_joined',
+        title=f"{name} left the project team"
+    )
+    db.session.add(activity)
+    db.session.commit()
+    
+    flash(f'{name} has been removed from the project.', 'info')
+    return redirect(url_for('student.workspace', project_id=project_id, _anchor='team'))
+
+# ==========================================================
+# MILESTONES & FILES & DISCUSSIONS
+# ==========================================================
 @student_bp.route('/workspace/<int:project_id>/milestone/add', methods=['POST'])
 def add_milestone(project_id):
     user_id = session['user_id']
@@ -294,6 +848,17 @@ def upload_file(project_id):
     )
     db.session.add(project_file)
     
+    # Log Activity
+    user = User.query.get(user_id)
+    activity = ProjectActivity(
+        project_id=project_id,
+        user_id=user_id,
+        activity_type='file_upload',
+        title=f"{user.full_name} uploaded deliverable '{orig_filename}' ({file_category})",
+        details=description
+    )
+    db.session.add(activity)
+    
     # Notify faculty guide
     project = Project.query.get(project_id)
     if project.faculty_guide_id:
@@ -312,32 +877,8 @@ def upload_file(project_id):
 
 @student_bp.route('/workspace/<int:project_id>/code/add', methods=['POST'])
 def add_code_snippet(project_id):
-    user_id = session['user_id']
-    membership = ProjectMember.query.filter_by(project_id=project_id, user_id=user_id).first()
-    if not membership:
-        abort(403)
-        
-    file_name = request.form.get('file_name', 'main.py').strip()
-    language = request.form.get('language', 'python')
-    code_content = request.form.get('code_content', '').strip()
-    commit_message = request.form.get('commit_message', 'Update code').strip()
-    
-    if not code_content:
-        flash('Code content cannot be empty.', 'warning')
-        return redirect(url_for('student.workspace', project_id=project_id, _anchor='code'))
-        
-    snippet = CodeSnippet(
-        project_id=project_id,
-        author_id=user_id,
-        file_name=file_name,
-        language=language,
-        code_content=code_content,
-        commit_message=commit_message
-    )
-    db.session.add(snippet)
-    db.session.commit()
-    flash('Code snippet / commit saved to project repository!', 'success')
-    return redirect(url_for('student.workspace', project_id=project_id, _anchor='code'))
+    # Backward compatible route pointing to code saving
+    return save_code_file(project_id)
 
 @student_bp.route('/workspace/<int:project_id>/discussion/post', methods=['POST'])
 def post_discussion(project_id):
@@ -408,3 +949,4 @@ def submit_final(project_id):
 def download_file(file_id):
     project_file = ProjectFile.query.get_or_404(file_id)
     return send_from_directory(current_app.config['UPLOAD_FOLDER'], project_file.file_path, as_attachment=True, download_name=project_file.original_name)
+

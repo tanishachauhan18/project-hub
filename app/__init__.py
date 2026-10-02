@@ -15,6 +15,38 @@ def create_app(config_class=Config):
     # Initialize database
     db.init_app(app)
     
+    with app.app_context():
+        db.create_all()
+        from sqlalchemy import text
+        try:
+            with db.engine.connect() as conn:
+                try:
+                    conn.execute(text("SELECT invite_code FROM projects LIMIT 1"))
+                except Exception:
+                    conn.execute(text("ALTER TABLE projects ADD COLUMN invite_code VARCHAR(64)"))
+                    conn.commit()
+                try:
+                    conn.execute(text("SELECT branch FROM code_snippets LIMIT 1"))
+                except Exception:
+                    conn.execute(text("ALTER TABLE code_snippets ADD COLUMN branch VARCHAR(50) DEFAULT 'main'"))
+                    conn.commit()
+                try:
+                    conn.execute(text("SELECT updated_at FROM code_snippets LIMIT 1"))
+                except Exception:
+                    conn.execute(text("ALTER TABLE code_snippets ADD COLUMN updated_at DATETIME"))
+                    conn.commit()
+                
+                # Ensure all projects have invite codes
+                from app.models import Project
+                import secrets
+                projects = Project.query.all()
+                for p in projects:
+                    if not p.invite_code:
+                        p.invite_code = f"hub_{secrets.token_urlsafe(8)}"
+                db.session.commit()
+        except Exception as e:
+            pass
+    
     # Context processor for global template variables
     @app.context_processor
     def inject_globals():

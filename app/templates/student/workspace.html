@@ -1,16 +1,18 @@
 {% extends "base.html" %}
-{% block title %}{{ project.title }} – Workspace | ProjectHub{% endblock %}
+{% block title %}{{ project.title }} – Collaborative Workspace | ProjectHub{% endblock %}
 
 {% block content %}
-<!-- Project Header Banner -->
+<!-- ==========================================================
+     PROJECT HEADER BANNER (GITHUB COLLABORATION HUB)
+     ========================================================== -->
 <div class="workspace-header mb-4">
   <div class="row align-items-center g-4">
     <div class="col-lg-8">
       <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-        <span class="badge bg-primary px-3 py-1">{{ project.domain }}</span>
+        <span class="badge bg-primary px-3 py-1"><i class="fas fa-cubes me-1"></i> {{ project.domain }}</span>
         <span class="badge-status badge-{{ project.status }}">{{ project.status.replace('_', ' ') }}</span>
         {% if project.github_url %}
-          <a href="{{ project.github_url }}" target="_blank" class="badge bg-dark text-white text-decoration-none py-1 px-2"><i class="fab fa-github me-1"></i> GitHub Repo</a>
+          <a href="{{ project.github_url }}" target="_blank" class="badge bg-dark text-white text-decoration-none py-1 px-2"><i class="fab fa-github me-1"></i> External GitHub</a>
         {% endif %}
         {% if project.live_demo_url %}
           <a href="{{ project.live_demo_url }}" target="_blank" class="badge bg-success text-white text-decoration-none py-1 px-2"><i class="fas fa-external-link-alt me-1"></i> Live Demo</a>
@@ -23,7 +25,7 @@
       <div class="workspace-meta">
         <div class="workspace-meta-item">
           <i class="fas fa-chalkboard-teacher"></i>
-          <span>Guide: <strong>{{ project.faculty_guide.full_name if project.faculty_guide else 'Pending Assignment' }}</strong></span>
+          <span>Guide: <strong>{{ project.faculty_guide.full_name if project.faculty_guide else 'Pending Guide' }}</strong></span>
         </div>
         <div class="workspace-meta-item">
           <i class="fas fa-crown text-warning"></i>
@@ -33,51 +35,92 @@
           <i class="fas fa-users"></i>
           <span>Team: <strong>{{ project.members | length }} Members</strong></span>
         </div>
+        <div class="workspace-meta-item">
+          <i class="fas fa-code-commit text-info"></i>
+          <span>Commits: <strong>{{ project.code_snippets | length }}</strong></span>
+        </div>
       </div>
     </div>
 
     <div class="col-lg-4 text-lg-end">
+      <!-- Progress Bar -->
       <div class="p-3 rounded-3 bg-white bg-opacity-10 backdrop-blur text-start mb-3">
         <div class="d-flex justify-content-between text-white small fw-bold mb-1">
-          <span>Overall Progress</span>
+          <span>Overall Milestone Progress</span>
           <span>{{ project.progress_percent }}%</span>
         </div>
         <div class="ph-progress-container" style="background: rgba(255,255,255,0.2);">
           <div class="ph-progress-bar" style="width: {{ project.progress_percent }}%;"></div>
         </div>
       </div>
-      <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
-        <i class="fas fa-sparkles me-1 text-warning"></i> AI Assistant Tools
-      </button>
+
+      <!-- Quick Action Buttons -->
+      <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+        <button class="btn btn-warning btn-sm fw-bold px-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#shareInviteModal">
+          <i class="fas fa-link me-1"></i> Share Invite Link
+        </button>
+        <div class="dropdown">
+          <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-download me-1"></i> Code & Export
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow">
+            <li>
+              <a class="dropdown-item" href="{{ url_for('student.download_code_zip', project_id=project.id) }}">
+                <i class="fas fa-file-archive text-primary me-2"></i> Download Code (ZIP)
+              </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <button class="dropdown-item" onclick="copyToClipboard('{{ invite_url }}', 'Collaboration link copied!')">
+                <i class="fas fa-share-nodes text-success me-2"></i> Copy Collaboration Link
+              </button>
+            </li>
+          </ul>
+        </div>
+        <button class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+          <i class="fas fa-sparkles me-1 text-warning"></i> AI Assistant
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Workspace Navigation Tabs -->
+<!-- ==========================================================
+     WORKSPACE NAVIGATION TABS
+     ========================================================== -->
 <div class="workspace-nav-tabs">
   <button class="workspace-tab-btn active" data-tab="overview">
     <i class="fas fa-info-circle"></i> Overview
   </button>
+  <button class="workspace-tab-btn" data-tab="code">
+    <i class="fas fa-code"></i> Code Studio <span class="badge-count">{{ project.code_snippets | length }}</span>
+  </button>
+  <button class="workspace-tab-btn" data-tab="issues">
+    <i class="fas fa-circle-dot"></i> Issues <span class="badge-count">{{ project.issues | length }}</span>
+  </button>
+  <button class="workspace-tab-btn" data-tab="pull-requests">
+    <i class="fas fa-code-pull-request"></i> Pull Requests <span class="badge-count">{{ project.pull_requests | length }}</span>
+  </button>
   <button class="workspace-tab-btn" data-tab="team">
-    <i class="fas fa-users"></i> Team Members <span class="badge-count">{{ project.members | length }}</span>
+    <i class="fas fa-users"></i> Team & Invites <span class="badge-count">{{ project.members | length }}</span>
+  </button>
+  <button class="workspace-tab-btn" data-tab="activity">
+    <i class="fas fa-bolt"></i> Activity Pulse <span class="badge-count">{{ project.activities | length }}</span>
   </button>
   <button class="workspace-tab-btn" data-tab="milestones">
     <i class="fas fa-tasks"></i> Milestones <span class="badge-count">{{ project.milestones | length }}</span>
   </button>
-  <button class="workspace-tab-btn" data-tab="code">
-    <i class="fas fa-code"></i> Code Repository <span class="badge-count">{{ project.code_snippets | length }}</span>
-  </button>
   <button class="workspace-tab-btn" data-tab="files">
-    <i class="fas fa-folder-open"></i> Files & Docs <span class="badge-count">{{ project.files | length }}</span>
+    <i class="fas fa-folder-open"></i> Deliverables <span class="badge-count">{{ project.files | length }}</span>
   </button>
   <button class="workspace-tab-btn" data-tab="discussion">
     <i class="fas fa-comments"></i> Discussion <span class="badge-count">{{ project.discussions | length }}</span>
   </button>
   <button class="workspace-tab-btn" data-tab="feedback">
-    <i class="fas fa-comment-dots"></i> Faculty Feedback <span class="badge-count">{{ project.feedbacks | length }}</span>
+    <i class="fas fa-comment-dots"></i> Faculty Remarks <span class="badge-count">{{ project.feedbacks | length }}</span>
   </button>
   <button class="workspace-tab-btn" data-tab="final-submission">
-    <i class="fas fa-award"></i> Final Submission & Grades
+    <i class="fas fa-award"></i> Defense & Grades
   </button>
 </div>
 
@@ -87,6 +130,22 @@
 <div class="tab-content-pane active" id="tab-overview">
   <div class="row g-4">
     <div class="col-lg-8">
+      
+      <!-- Collaboration Banner -->
+      <div class="invite-hero-box mb-4">
+        <div class="row align-items-center g-3">
+          <div class="col-md-7">
+            <h5 class="fw-bold mb-1"><i class="fas fa-users-viewfinder me-2 text-warning"></i> Team Collaboration is Live</h5>
+            <p class="small text-white-50 mb-0">Share the unique project invitation link with classmates to form your team and code together.</p>
+          </div>
+          <div class="col-md-5 text-md-end">
+            <button class="btn btn-light btn-sm fw-bold px-3" data-bs-toggle="modal" data-bs-target="#shareInviteModal">
+              <i class="fas fa-share-alt me-1 text-primary"></i> Copy & Share Link
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="ph-card p-4 bg-white shadow-sm mb-4">
         <h5 class="font-heading mb-3">Project Description & Architecture</h5>
         <p class="text-muted leading-relaxed mb-4">{{ project.abstract }}</p>
@@ -105,7 +164,7 @@
               {% if project.github_url %}
                 <a href="{{ project.github_url }}" target="_blank" class="fw-bold text-primary small text-break"><i class="fab fa-github me-1"></i> {{ project.github_url }}</a>
               {% else %}
-                <span class="small text-muted fst-italic">Not linked yet</span>
+                <span class="small text-muted fst-italic">Local in-browser repository active</span>
               {% endif %}
             </div>
           </div>
@@ -121,9 +180,38 @@
           </div>
         </div>
       </div>
+
+      <!-- Quick Repository Summary Card -->
+      <div class="ph-card p-4 bg-white shadow-sm mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="font-heading mb-0"><i class="fas fa-code-branch text-primary me-2"></i>Code Repository Snapshot</h5>
+          <a href="{{ url_for('student.download_code_zip', project_id=project.id) }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-download me-1"></i> Download ZIP
+          </a>
+        </div>
+        {% if project.code_snippets %}
+          <div class="list-group list-group-flush">
+            {% for s in project.code_snippets[:4] %}
+              <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                  <i class="fas fa-file-code text-primary"></i>
+                  <span class="fw-bold font-monospace text-navy">{{ s.file_name }}</span>
+                  <span class="badge bg-light text-muted border">{{ s.language }}</span>
+                  <small class="text-muted ms-2">{{ s.commit_message }}</small>
+                </div>
+                <small class="text-muted">{{ s.created_at | timeago }}</small>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted small mb-0">No code files committed yet. Open the <strong>Code Studio</strong> tab to commit your first file.</p>
+        {% endif %}
+      </div>
+
     </div>
 
     <div class="col-lg-4">
+      <!-- Faculty Guide Box -->
       <div class="ph-card p-4 bg-white shadow-sm mb-4">
         <h5 class="font-heading mb-3">Faculty Guide Details</h5>
         {% if project.faculty_guide %}
@@ -148,26 +236,447 @@
           </div>
         {% endif %}
       </div>
+
+      <!-- Quick Teammates Card -->
+      <div class="ph-card p-4 bg-white shadow-sm mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="font-heading mb-0">Team Roster ({{ project.members | length }})</h5>
+          <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#shareInviteModal">
+            <i class="fas fa-plus me-1"></i> Invite
+          </button>
+        </div>
+        <div class="d-flex flex-column gap-2">
+          {% for m in project.members %}
+            <div class="d-flex align-items-center justify-content-between p-2 rounded-3 bg-light">
+              <div class="d-flex align-items-center gap-2">
+                <div class="user-avatar-circle" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                  {{ m.user.full_name[0] }}
+                </div>
+                <div>
+                  <div class="fw-bold small text-navy">{{ m.user.full_name }}</div>
+                  <div class="text-muted" style="font-size: 0.72rem;">{{ m.role_in_team }}</div>
+                </div>
+              </div>
+              {% if m.user_id == project.created_by_id %}
+                <span class="badge bg-warning text-dark" style="font-size: 0.65rem;"><i class="fas fa-crown"></i> Lead</span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
 
 <!-- ==========================================================
-     TAB PANE 2: TEAM MEMBERS (2-4 MEMBERS)
+     TAB PANE 2: GITHUB CODE STUDIO (MULTI-FILE REPOSITORY)
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-code">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h4 class="font-heading mb-1"><i class="fas fa-laptop-code text-primary me-2"></i>ProjectHub Code Studio</h4>
+      <p class="text-muted small mb-0">Multi-file collaborative repository with in-browser editing, commits, and AST security audits.</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ url_for('student.download_code_zip', project_id=project.id) }}" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-file-zipper me-1"></i> Download ZIP
+      </a>
+      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
+        <i class="fas fa-shield-alt text-primary me-1"></i> AI Security Audit
+      </button>
+      <button class="btn btn-primary-ph btn-sm" data-bs-toggle="modal" data-bs-target="#addCodeSnippetModal">
+        <i class="fas fa-plus me-1"></i> New File / Commit
+      </button>
+    </div>
+  </div>
+
+  {% if project.code_snippets %}
+    <!-- Code Studio Main Workspace -->
+    <div class="studio-layout shadow-sm mb-4">
+      
+      <!-- Studio Left Sidebar (File Explorer) -->
+      <div class="studio-sidebar">
+        <div class="studio-sidebar-header">
+          <span><i class="fas fa-folder-tree me-1"></i> Files Explorer</span>
+          <span class="badge bg-primary px-2" style="font-size: 0.7rem;">{{ project.code_snippets | length }} Files</span>
+        </div>
+        <ul class="studio-file-list" id="studioFileList">
+          {% for s in snippets %}
+            <li class="studio-file-item {% if loop.first %}active{% endif %}" 
+                onclick="loadSnippetFile('{{ s.id }}', '{{ s.file_name }}', '{{ s.language }}', '{{ s.branch }}', '{{ s.commit_message | escape }}', '{{ s.author.full_name }}')"
+                id="file-item-{{ s.id }}">
+              <div class="d-flex align-items-center gap-2 text-truncate">
+                {% if s.file_name.endswith('.py') %}
+                  <i class="fab fa-python text-warning"></i>
+                {% elif s.file_name.endswith('.js') or s.file_name.endswith('.ts') %}
+                  <i class="fab fa-js text-warning"></i>
+                {% elif s.file_name.endswith('.html') %}
+                  <i class="fab fa-html5 text-danger"></i>
+                {% elif s.file_name.endswith('.css') %}
+                  <i class="fab fa-css3-alt text-info"></i>
+                {% elif s.file_name.endswith('.md') %}
+                  <i class="fab fa-markdown text-white"></i>
+                {% elif s.file_name.endswith('.json') %}
+                  <i class="fas fa-brackets-curly text-success"></i>
+                {% else %}
+                  <i class="fas fa-file-code text-primary"></i>
+                {% endif %}
+                <span class="text-truncate">{{ s.file_name }}</span>
+              </div>
+              <small class="text-muted" style="font-size: 0.7rem;">{{ s.branch }}</small>
+            </li>
+          {% endfor %}
+        </ul>
+        <div class="p-2 border-top border-secondary border-opacity-25 text-center">
+          <button class="btn btn-outline-light btn-sm w-100 py-1" style="font-size: 0.75rem;" data-bs-toggle="modal" data-bs-target="#addCodeSnippetModal">
+            <i class="fas fa-file-circle-plus me-1"></i> Add File
+          </button>
+        </div>
+      </div>
+
+      <!-- Studio Right Editor / Code Viewer Area -->
+      <div class="studio-editor-area">
+        <div class="studio-editor-header">
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-bold font-monospace text-white" id="activeFileName">{{ snippets[0].file_name }}</span>
+            <span class="badge bg-secondary-subtle text-dark" id="activeFileLang" style="font-size: 0.7rem;">{{ snippets[0].language }}</span>
+            <span class="badge bg-info bg-opacity-25 text-info" id="activeFileBranch" style="font-size: 0.7rem;">{{ snippets[0].branch }}</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-light btn-sm py-1 px-2" style="font-size: 0.78rem;" id="copyActiveCodeBtn" onclick="copyCurrentActiveCode()">
+              <i class="fas fa-copy me-1"></i> Copy
+            </button>
+            <button class="btn btn-primary-ph btn-sm py-1 px-2" style="font-size: 0.78rem;" data-bs-toggle="modal" data-bs-target="#editActiveCodeModal">
+              <i class="fas fa-edit me-1"></i> Edit & Commit
+            </button>
+            <form id="deleteSnippetForm" method="POST" action="{{ url_for('student.delete_code_file', project_id=project.id, snippet_id=snippets[0].id) }}" onsubmit="return confirm('Are you sure you want to delete this file from the project repository?');" class="d-inline">
+              <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2" style="font-size: 0.78rem;">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="p-2 px-3 bg-dark border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center text-muted" style="font-size: 0.75rem;">
+          <span id="activeCommitMsg"><i class="fas fa-code-commit text-primary me-1"></i> {{ snippets[0].commit_message }}</span>
+          <span id="activeAuthorMeta">Committed by {{ snippets[0].author.full_name }}</span>
+        </div>
+
+        <!-- Hidden Code Data Store for JS Switching -->
+        <div id="snippetsDataStore" style="display: none;">
+          {% for s in snippets %}
+            <textarea id="raw-snippet-{{ s.id }}">{{ s.code_content }}</textarea>
+          {% endfor %}
+        </div>
+
+        <div class="studio-editor-body">
+          <pre class="m-0 p-3"><code class="language-{{ snippets[0].language }}" id="activeCodeBlock">{{ snippets[0].code_content }}</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rendered Markdown Card (if README.md exists) -->
+    {% for s in snippets %}
+      {% if s.file_name.lower() == 'readme.md' %}
+        <div class="ph-card p-4 bg-white shadow-sm mb-4">
+          <div class="d-flex align-items-center gap-2 pb-2 mb-3 border-bottom">
+            <i class="fab fa-markdown text-primary fs-5"></i>
+            <h5 class="font-heading mb-0">README.md Preview</h5>
+          </div>
+          <div class="p-3 bg-light rounded-3 markdown-rendered-body" id="readmeMarkdownContainer">
+            <!-- Will be parsed by marked.js on load -->
+            <div id="readmeRawSource" style="display:none;">{{ s.code_content }}</div>
+            <div id="readmeRenderedTarget"></div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+
+    <!-- Commit History Timeline -->
+    <div class="ph-card p-4 bg-white shadow-sm mb-4">
+      <h5 class="font-heading mb-3"><i class="fas fa-history text-primary me-2"></i>Commit History Log</h5>
+      <div class="table-responsive">
+        <table class="ph-table">
+          <thead>
+            <tr>
+              <th>Commit Message</th>
+              <th>File</th>
+              <th>Branch</th>
+              <th>Author</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in snippets %}
+              <tr>
+                <td>
+                  <div class="fw-bold text-navy"><i class="fas fa-code-commit text-primary me-2"></i>{{ s.commit_message }}</div>
+                </td>
+                <td><code>{{ s.file_name }}</code></td>
+                <td><span class="badge bg-secondary-subtle text-dark">{{ s.branch }}</span></td>
+                <td>
+                  <span class="small fw-semibold">{{ s.author.full_name }}</span>
+                </td>
+                <td class="small text-muted">{{ s.created_at | timeago }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  {% else %}
+    <!-- Empty State -->
+    <div class="ph-card p-5 text-center bg-white shadow-sm">
+      <div class="stat-icon purple mx-auto mb-3"><i class="fas fa-laptop-code"></i></div>
+      <h5 class="font-heading mb-2">No Files in Code Studio Yet</h5>
+      <p class="text-muted small mb-4">Create source modules, API routes, or a README to start coding with your team.</p>
+      <button class="btn btn-primary-ph" data-bs-toggle="modal" data-bs-target="#addCodeSnippetModal">
+        <i class="fas fa-plus me-1"></i> Create First Project File
+      </button>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ==========================================================
+     TAB PANE 3: GITHUB ISSUES & TASK BOARD
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-issues">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h4 class="font-heading mb-1"><i class="fas fa-circle-dot text-success me-2"></i>GitHub Issues & Tasks</h4>
+      <p class="text-muted small mb-0">Track bugs, feature requests, and assignments across your project team.</p>
+    </div>
+    <button class="btn btn-primary-ph btn-sm" data-bs-toggle="modal" data-bs-target="#addIssueModal">
+      <i class="fas fa-plus me-1"></i> New Issue
+    </button>
+  </div>
+
+  {% if project.issues %}
+    <div class="row g-3">
+      {% for issue in project.issues %}
+        <div class="col-12">
+          <div class="ph-card p-3 bg-white shadow-sm border-start border-4 {% if issue.status == 'open' %}border-success{% else %}border-secondary opacity-75{% endif %}">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+              <div class="d-flex align-items-start gap-2">
+                {% if issue.status == 'open' %}
+                  <i class="fas fa-circle-dot text-success mt-1"></i>
+                {% else %}
+                  <i class="fas fa-check-circle text-secondary mt-1"></i>
+                {% endif %}
+                <div>
+                  <h6 class="fw-bold text-navy mb-1">
+                    #{{ issue.id }} {{ issue.title }}
+                    <span class="issue-label-badge issue-label-{{ issue.label }} ms-1">{{ issue.label }}</span>
+                    <span class="badge bg-light text-muted border" style="font-size: 0.68rem;">{{ issue.priority | upper }}</span>
+                  </h6>
+                  <p class="text-muted small mb-2">{{ issue.description }}</p>
+                  <div class="d-flex flex-wrap align-items-center gap-3 text-muted" style="font-size: 0.75rem;">
+                    <span>Opened by <strong>{{ issue.creator.full_name }}</strong> · {{ issue.created_at | timeago }}</span>
+                    {% if issue.assignee %}
+                      <span><i class="fas fa-user-tag text-primary me-1"></i> Assigned to <strong>{{ issue.assignee.full_name }}</strong></span>
+                    {% endif %}
+                    <span><i class="fas fa-comments me-1"></i> {{ issue.comments | length }} comments</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Issue Actions -->
+              <div class="d-flex align-items-center gap-2">
+                <form method="POST" action="{{ url_for('student.toggle_issue', project_id=project.id, issue_id=issue.id) }}">
+                  <button type="submit" class="btn btn-sm {% if issue.status == 'open' %}btn-outline-danger{% else %}btn-outline-success{% endif %} rounded-pill px-3 py-1" style="font-size: 0.75rem;">
+                    {% if issue.status == 'open' %}<i class="fas fa-check me-1"></i> Close Issue{% else %}<i class="fas fa-undo me-1"></i> Reopen{% endif %}
+                  </button>
+                </form>
+                <button class="btn btn-sm btn-outline-primary py-1 px-2" style="font-size: 0.75rem;" type="button" data-bs-toggle="collapse" data-bs-target="#issue-comments-{{ issue.id }}">
+                  <i class="fas fa-comment-dots"></i> Discussion
+                </button>
+              </div>
+            </div>
+
+            <!-- Expandable Comments Thread -->
+            <div class="collapse pt-3 border-top mt-2" id="issue-comments-{{ issue.id }}">
+              {% if issue.comments %}
+                <div class="d-flex flex-column gap-2 mb-3">
+                  {% for c in issue.comments %}
+                    <div class="p-2 rounded-3 bg-light d-flex gap-2">
+                      <div class="user-avatar-circle" style="width: 26px; height: 26px; font-size: 0.7rem;">
+                        {{ c.user.full_name[0] }}
+                      </div>
+                      <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                          <strong style="font-size: 0.78rem;">{{ c.user.full_name }}</strong>
+                          <span class="text-muted" style="font-size: 0.65rem;">{{ c.created_at | timeago }}</span>
+                        </div>
+                        <div class="small text-dark">{{ c.comment }}</div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <!-- Post Comment Form -->
+              <form method="POST" action="{{ url_for('student.add_issue_comment', project_id=project.id, issue_id=issue.id) }}" class="d-flex gap-2">
+                <input type="text" name="comment" class="form-control form-control-sm" placeholder="Write a comment or resolution notes..." required autocomplete="off">
+                <button type="submit" class="btn btn-primary-ph btn-sm px-3">
+                  <i class="fas fa-reply"></i>
+                </button>
+              </form>
+            </div>
+
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="ph-card p-5 text-center bg-white shadow-sm">
+      <div class="stat-icon emerald mx-auto mb-3"><i class="fas fa-circle-dot"></i></div>
+      <h5 class="font-heading mb-2">No Open Issues</h5>
+      <p class="text-muted small mb-4">Organize sprints, track bug reports, and distribute tasks with your team.</p>
+      <button class="btn btn-primary-ph" data-bs-toggle="modal" data-bs-target="#addIssueModal">
+        <i class="fas fa-plus me-1"></i> Create First Issue
+      </button>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ==========================================================
+     TAB PANE 4: GITHUB PULL REQUESTS & CODE REVIEWS
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-pull-requests">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h4 class="font-heading mb-1"><i class="fas fa-code-pull-request text-primary me-2"></i>Pull Requests & Code Reviews</h4>
+      <p class="text-muted small mb-0">Review proposed code patches, inspect branch diffs, and merge verified features.</p>
+    </div>
+    <button class="btn btn-primary-ph btn-sm" data-bs-toggle="modal" data-bs-target="#addPRModal">
+      <i class="fas fa-plus me-1"></i> New Pull Request
+    </button>
+  </div>
+
+  {% if project.pull_requests %}
+    <div class="row g-3">
+      {% for pr in project.pull_requests %}
+        <div class="col-12">
+          <div class="ph-card p-4 bg-white shadow-sm border-start border-4 {% if pr.status == 'open' %}border-success{% elif pr.status == 'merged' %}border-primary{% else %}border-danger{% endif %}">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  {% if pr.status == 'open' %}
+                    <span class="badge pr-badge-open px-2 py-1"><i class="fas fa-code-pull-request me-1"></i> Open</span>
+                  {% elif pr.status == 'merged' %}
+                    <span class="badge pr-badge-merged px-2 py-1"><i class="fas fa-code-merge me-1"></i> Merged</span>
+                  {% else %}
+                    <span class="badge pr-badge-closed px-2 py-1"><i class="fas fa-times me-1"></i> Closed</span>
+                  {% endif %}
+                  <h5 class="fw-bold text-navy mb-0">#{{ pr.id }} {{ pr.title }}</h5>
+                </div>
+                <div class="small text-muted mb-2">
+                  <code>{{ pr.source_branch }}</code> <i class="fas fa-arrow-right text-muted mx-1"></i> <code>{{ pr.target_branch }}</code>
+                  · by <strong>{{ pr.author.full_name }}</strong> · {{ pr.created_at | timeago }}
+                </div>
+                <p class="text-dark small mb-0">{{ pr.description }}</p>
+              </div>
+
+              <!-- PR Actions -->
+              <div class="d-flex align-items-center gap-2">
+                {% if pr.status == 'open' %}
+                  <form method="POST" action="{{ url_for('student.merge_pull_request', project_id=project.id, pr_id=pr.id) }}">
+                    <button type="submit" class="btn btn-success btn-sm px-3 shadow-sm">
+                      <i class="fas fa-check-double me-1"></i> Merge PR
+                    </button>
+                  </form>
+                  <form method="POST" action="{{ url_for('student.close_pull_request', project_id=project.id, pr_id=pr.id) }}">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm px-2">
+                      <i class="fas fa-times"></i> Close
+                    </button>
+                  </form>
+                {% elif pr.status == 'merged' %}
+                  <span class="badge bg-primary-subtle text-primary py-2 px-3">
+                    <i class="fas fa-check-circle me-1"></i> Merged by {{ pr.merged_by.full_name if pr.merged_by else 'Lead' }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="ph-card p-5 text-center bg-white shadow-sm">
+      <div class="stat-icon blue mx-auto mb-3"><i class="fas fa-code-pull-request"></i></div>
+      <h5 class="font-heading mb-2">No Pull Requests</h5>
+      <p class="text-muted small mb-4">Teammates can submit feature branches for code review before merging into main.</p>
+      <button class="btn btn-primary-ph" data-bs-toggle="modal" data-bs-target="#addPRModal">
+        <i class="fas fa-plus me-1"></i> Create First Pull Request
+      </button>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ==========================================================
+     TAB PANE 5: TEAM & INVITES (SHARE LINK HUB)
      ========================================================== -->
 <div class="tab-content-pane" id="tab-team">
+  
+  <!-- Shareable Invitation Box -->
+  <div class="ph-card p-4 p-md-5 bg-white shadow-sm border border-primary border-opacity-25 rounded-4 mb-4">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span class="badge bg-primary px-3 py-1"><i class="fas fa-shield-alt me-1"></i> Instant Team Access</span>
+          <span class="badge bg-success-subtle text-success">Active Link</span>
+        </div>
+        <h4 class="font-heading text-navy mb-2">Invite Classmates & Teammates</h4>
+        <p class="text-muted small mb-3">
+          Share this unique project collaboration link with your classmates. Anyone who opens the link can choose their role (Frontend, Backend, AI/ML, DevOps) and immediately join your project team workspace.
+        </p>
+
+        <div class="input-group mb-3">
+          <input type="text" class="form-control font-monospace text-navy" id="projectInviteLinkInput" value="{{ invite_url }}" readonly>
+          <button class="btn btn-primary-ph px-4" onclick="copyToClipboard('{{ invite_url }}', 'Project invite link copied to clipboard!')">
+            <i class="fas fa-copy me-1"></i> Copy Link
+          </button>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <a href="https://api.whatsapp.com/send?text=Join%20our%20ProjectHub%20team%20for%20{{ project.title | urlencode }}%3A%20{{ invite_url | urlencode }}" target="_blank" class="btn btn-outline-success btn-sm">
+            <i class="fab fa-whatsapp me-1"></i> Share on WhatsApp
+          </a>
+          <a href="mailto:?subject=Join%20our%20team%20on%20ProjectHub&body=Hey%2C%20join%20our%20academic%20project%20team%20here%3A%20{{ invite_url }}" class="btn btn-outline-dark btn-sm">
+            <i class="fas fa-envelope me-1"></i> Send Email
+          </a>
+          <form method="POST" action="{{ url_for('student.regenerate_invite_code', project_id=project.id) }}" onsubmit="return confirm('Regenerate invite code? Previous links will expire.')" class="d-inline">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-rotate me-1"></i> Regenerate Link
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-lg-5 text-center">
+        <div class="p-3 bg-light rounded-4 d-inline-block shadow-sm">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data={{ invite_url | urlencode }}" alt="Invite QR Code" class="img-fluid rounded-3 mb-2" style="width: 150px; height: 150px;">
+          <div class="small text-muted fw-bold">Scan with Mobile to Join</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Directory -->
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <h4 class="font-heading mb-1">Project Team Directory</h4>
-      <p class="text-muted small mb-0">Collaborating members and designated responsibilities.</p>
+      <p class="text-muted small mb-0">Collaborating members, designated roles, and permissions.</p>
     </div>
-    <span class="badge bg-primary-subtle text-primary px-3 py-2 fw-bold">Team Size: {{ project.members | length }} / 4 Members</span>
+    <span class="badge bg-primary-subtle text-primary px-3 py-2 fw-bold">Team Size: {{ project.members | length }} Members</span>
   </div>
 
   <div class="row g-4">
     {% for member in project.members %}
       <div class="col-md-6 col-lg-4">
-        <div class="ph-card p-4 bg-white shadow-sm h-100">
+        <div class="ph-card p-4 bg-white shadow-sm h-100 position-relative">
           <div class="d-flex align-items-center gap-3 mb-3">
             <div class="user-avatar-circle" style="width: 48px; height: 48px;">
               {{ member.user.full_name[0] }}
@@ -175,6 +684,9 @@
             <div>
               <h5 class="font-heading fs-6 mb-0">{{ member.user.full_name }}</h5>
               <span class="badge bg-primary-subtle text-primary mt-1">{{ member.role_in_team }}</span>
+              {% if member.user_id == project.created_by_id %}
+                <span class="badge bg-warning text-dark" style="font-size: 0.65rem;"><i class="fas fa-crown"></i> Leader</span>
+              {% endif %}
             </div>
           </div>
 
@@ -184,9 +696,25 @@
             <div><strong>Department:</strong> <span class="text-muted">{{ member.user.department }}</span></div>
           </div>
 
-          <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.75rem;">
+          <!-- Member Role Change Form -->
+          <form method="POST" action="{{ url_for('student.change_team_role', project_id=project.id, member_id=member.id) }}" class="mb-3">
+            <div class="input-group input-group-sm">
+              <input type="text" name="role_in_team" class="form-control" value="{{ member.role_in_team }}" placeholder="Change role title...">
+              <button type="submit" class="btn btn-outline-primary">Update</button>
+            </div>
+          </form>
+
+          <div class="d-flex justify-content-between align-items-center text-muted border-top pt-2" style="font-size: 0.75rem;">
             <span>Joined {{ member.joined_at.strftime('%b %d, %Y') }}</span>
-            <span class="text-success"><i class="fas fa-check-circle me-1"></i> Active</span>
+            {% if member.user_id != project.created_by_id %}
+              <form method="POST" action="{{ url_for('student.remove_team_member', project_id=project.id, member_id=member.id) }}" onsubmit="return confirm('Remove {{ member.user.full_name }} from team?');">
+                <button type="submit" class="btn btn-link text-danger p-0 text-decoration-none" style="font-size: 0.75rem;">
+                  <i class="fas fa-user-minus me-1"></i> Remove
+                </button>
+              </form>
+            {% else %}
+              <span class="text-success"><i class="fas fa-shield-alt me-1"></i> Lead</span>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -195,7 +723,44 @@
 </div>
 
 <!-- ==========================================================
-     TAB PANE 3: MILESTONES & PROGRESS
+     TAB PANE 6: ACTIVITY PULSE
+     ========================================================== -->
+<div class="tab-content-pane" id="tab-activity">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h4 class="font-heading mb-1"><i class="fas fa-bolt text-warning me-2"></i>Live Team Collaboration Pulse</h4>
+      <p class="text-muted small mb-0">Real-time timeline of commits, PR merges, issues, and member participation.</p>
+    </div>
+  </div>
+
+  {% if project.activities %}
+    <div class="ph-card p-4 p-md-5 bg-white shadow-sm">
+      <div class="activity-stream-timeline">
+        {% for act in project.activities %}
+          <div class="activity-stream-item">
+            <div class="activity-stream-dot"></div>
+            <div class="d-flex justify-content-between align-items-center gap-2">
+              <h6 class="fw-bold text-navy mb-1">{{ act.title }}</h6>
+              <span class="text-muted" style="font-size: 0.72rem;">{{ act.created_at | timeago }}</span>
+            </div>
+            {% if act.details %}
+              <p class="text-muted small mb-0">{{ act.details }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% else %}
+    <div class="ph-card p-5 text-center bg-white shadow-sm">
+      <div class="stat-icon blue mx-auto mb-3"><i class="fas fa-bolt"></i></div>
+      <h5 class="font-heading mb-2">No Activity Recorded Yet</h5>
+      <p class="text-muted small">Commits, file uploads, and issue changes will appear here in chronological order.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- ==========================================================
+     TAB PANE 7: MILESTONES & PROGRESS
      ========================================================== -->
 <div class="tab-content-pane" id="tab-milestones">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -246,58 +811,7 @@
 </div>
 
 <!-- ==========================================================
-     TAB PANE 4: CODE COLLABORATION
-     ========================================================== -->
-<div class="tab-content-pane" id="tab-code">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h4 class="font-heading mb-1">Source Code Repository & Commits</h4>
-      <p class="text-muted small mb-0">Inspect committed modules, review AST syntax, and copy snippets.</p>
-    </div>
-    <div class="d-flex gap-2">
-      <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#aiAssistantModal">
-        <i class="fas fa-shield-alt text-primary me-1"></i> AI Security Review
-      </button>
-      <button class="btn btn-primary-ph btn-sm" data-bs-toggle="modal" data-bs-target="#addCodeSnippetModal">
-        <i class="fas fa-code-branch me-1"></i> Commit Code Snippet
-      </button>
-    </div>
-  </div>
-
-  {% if project.code_snippets %}
-    {% for snippet in project.code_snippets %}
-      <div class="code-container shadow-sm">
-        <div class="code-header">
-          <div class="d-flex align-items-center gap-2">
-            <i class="fas fa-file-code text-primary"></i>
-            <span class="text-white fw-bold">{{ snippet.file_name }}</span>
-            <span class="badge bg-secondary-subtle text-dark" style="font-size: 0.68rem;">{{ snippet.language }}</span>
-            <span class="text-muted ms-2" style="font-size: 0.75rem;">· {{ snippet.commit_message }}</span>
-          </div>
-          <div class="d-flex align-items-center gap-3">
-            <span class="text-muted" style="font-size: 0.75rem;">By {{ snippet.author.full_name }} · {{ snippet.created_at | timeago }}</span>
-            <button class="btn btn-sm btn-outline-light btn-copy-code py-0 px-2" data-code-id="code-body-{{ snippet.id }}">
-              <i class="fas fa-copy me-1"></i> Copy
-            </button>
-          </div>
-        </div>
-        <pre class="code-body" id="code-body-{{ snippet.id }}"><code>{{ snippet.code_content }}</code></pre>
-      </div>
-    {% endfor %}
-  {% else %}
-    <div class="ph-card p-5 text-center bg-white shadow-sm">
-      <div class="stat-icon purple mx-auto mb-3"><i class="fas fa-code"></i></div>
-      <h5 class="font-heading mb-2">No Code Commits Yet</h5>
-      <p class="text-muted small mb-4">Share core algorithm scripts or container configs with your guide.</p>
-      <button class="btn btn-primary-ph" data-bs-toggle="modal" data-bs-target="#addCodeSnippetModal">
-        <i class="fas fa-code-branch me-1"></i> Commit First Snippet
-      </button>
-    </div>
-  {% endif %}
-</div>
-
-<!-- ==========================================================
-     TAB PANE 5: FILES & DOCUMENTS VAULT
+     TAB PANE 8: FILES & DOCUMENTS VAULT
      ========================================================== -->
 <div class="tab-content-pane" id="tab-files">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -363,7 +877,7 @@
 </div>
 
 <!-- ==========================================================
-     TAB PANE 6: TEAM DISCUSSION CHAT
+     TAB PANE 9: TEAM DISCUSSION CHAT
      ========================================================== -->
 <div class="tab-content-pane" id="tab-discussion">
   <div class="d-flex justify-content-between align-items-center mb-3">
@@ -411,7 +925,7 @@
 </div>
 
 <!-- ==========================================================
-     TAB PANE 7: FACULTY FEEDBACK
+     TAB PANE 10: FACULTY FEEDBACK
      ========================================================== -->
 <div class="tab-content-pane" id="tab-feedback">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -451,7 +965,7 @@
 </div>
 
 <!-- ==========================================================
-     TAB PANE 8: FINAL SUBMISSION & EVALUATION SCORECARD
+     TAB PANE 11: FINAL SUBMISSION & EVALUATION SCORECARD
      ========================================================== -->
 <div class="tab-content-pane" id="tab-final-submission">
   <div class="d-flex justify-content-between align-items-center mb-4">
@@ -462,7 +976,6 @@
   </div>
 
   {% if evaluation %}
-    <!-- Evaluation Scorecard Banner -->
     <div class="ph-card p-4 p-md-5 bg-white shadow-sm border border-success mb-4 rounded-4">
       <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-3 border-bottom">
         <div>
@@ -475,7 +988,6 @@
         </div>
       </div>
 
-      <!-- 5-Criteria Rubric Breakdown -->
       <div class="rubric-grid">
         <div class="rubric-card">
           <div class="rubric-header">
@@ -527,7 +1039,6 @@
       </div>
     </div>
   {% else %}
-    <!-- Submission Form -->
     <div class="row justify-content-center">
       <div class="col-lg-8">
         <div class="ph-card p-4 p-md-5 bg-white shadow-sm rounded-4">
@@ -570,10 +1081,249 @@
 </div>
 
 <!-- ==========================================================
-     MODALS: ADD MILESTONE, UPLOAD FILE, COMMIT CODE
+     MODALS: SHARE INVITE, COMMIT CODE, EDIT FILE, ISSUES, PRS, MILESTONES, FILES
      ========================================================== -->
 
-<!-- 1. Add Milestone Modal -->
+<!-- 1. Share Invite Link Modal -->
+<div class="modal fade" id="shareInviteModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-navy text-white">
+        <h5 class="modal-title font-heading mb-0 text-white"><i class="fas fa-link me-2 text-warning"></i>Share Project Collaboration Link</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="text-muted small mb-3">
+          Share this link with your team members. When they click it, they will join this project directly and get full access to the Code Studio, Issues, and Milestones!
+        </p>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Collaborator Invite URL</label>
+          <div class="input-group">
+            <input type="text" class="form-control font-monospace" id="modalInviteInput" value="{{ invite_url }}" readonly>
+            <button class="btn btn-primary-ph" onclick="copyToClipboard('{{ invite_url }}', 'Collaboration link copied!')">
+              <i class="fas fa-copy me-1"></i> Copy
+            </button>
+          </div>
+        </div>
+        <div class="p-3 bg-light rounded-3 text-center mb-3">
+          <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data={{ invite_url | urlencode }}" alt="Invite QR" class="img-fluid rounded mb-2" style="width: 120px; height: 120px;">
+          <div class="text-muted small fw-semibold">Scan QR to join team immediately</div>
+        </div>
+        <div class="d-flex gap-2">
+          <a href="https://api.whatsapp.com/send?text=Join%20our%20ProjectHub%20team%3A%20{{ invite_url | urlencode }}" target="_blank" class="btn btn-outline-success btn-sm flex-fill">
+            <i class="fab fa-whatsapp me-1"></i> WhatsApp
+          </a>
+          <a href="mailto:?subject=ProjectHub%20Team%20Invite&body={{ invite_url }}" class="btn btn-outline-dark btn-sm flex-fill">
+            <i class="fas fa-envelope me-1"></i> Email
+          </a>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Done</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Commit / Add New File Modal -->
+<div class="modal fade" id="addCodeSnippetModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-navy text-white">
+        <h5 class="modal-title font-heading mb-0 text-white"><i class="fas fa-file-code me-2"></i>Create New File / Commit</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('student.save_code_file', project_id=project.id) }}" method="POST">
+        <div class="modal-body p-4">
+          <div class="row g-3 mb-3">
+            <div class="col-md-5">
+              <label class="form-label fw-semibold small">File Name with Extension <span class="text-danger">*</span></label>
+              <input type="text" name="file_name" class="form-control font-monospace" placeholder="e.g. app.py, models/user.py, index.html" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small">Language / Syntax</label>
+              <select name="language" class="form-select">
+                <option value="python" selected>Python</option>
+                <option value="javascript">JavaScript / TypeScript</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="markdown">Markdown (README)</option>
+                <option value="sql">SQL</option>
+                <option value="json">JSON</option>
+                <option value="cpp">C / C++</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small">Branch</label>
+              <input type="text" name="branch" class="form-control" value="main">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Commit Message <span class="text-danger">*</span></label>
+            <input type="text" name="commit_message" class="form-control" placeholder="e.g. Add authentication middleware and rate limiter" required>
+          </div>
+          <div class="mb-0">
+            <label class="form-label fw-semibold small">Source Code Content <span class="text-danger">*</span></label>
+            <textarea name="code_content" class="form-control font-monospace" rows="10" placeholder="// Type or paste your code here..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-ph btn-sm"><i class="fas fa-code-commit me-1"></i> Commit File to Repository</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Edit Active Code Modal -->
+<div class="modal fade" id="editActiveCodeModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-navy text-white">
+        <h5 class="modal-title font-heading mb-0 text-white"><i class="fas fa-edit me-2"></i>Edit File & Commit Changes</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('student.save_code_file', project_id=project.id) }}" method="POST">
+        <div class="modal-body p-4">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">File Name</label>
+              <input type="text" name="file_name" id="editModalFileName" class="form-control font-monospace" value="{{ snippets[0].file_name if snippets else '' }}" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small">Language</label>
+              <select name="language" id="editModalLang" class="form-select">
+                <option value="python">Python</option>
+                <option value="javascript">JavaScript / TypeScript</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="markdown">Markdown</option>
+                <option value="sql">SQL</option>
+                <option value="json">JSON</option>
+                <option value="cpp">C / C++</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small">Branch</label>
+              <input type="text" name="branch" id="editModalBranch" class="form-control" value="{{ snippets[0].branch if snippets else 'main' }}">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Commit Message <span class="text-danger">*</span></label>
+            <input type="text" name="commit_message" class="form-control" placeholder="e.g. Refactor handler and optimize performance" required>
+          </div>
+          <div class="mb-0">
+            <label class="form-label fw-semibold small">Source Code</label>
+            <textarea name="code_content" id="editModalContent" class="form-control font-monospace" rows="12" required>{{ snippets[0].code_content if snippets else '' }}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-ph btn-sm"><i class="fas fa-check me-1"></i> Commit Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 4. Add Issue Modal -->
+<div class="modal fade" id="addIssueModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-navy text-white">
+        <h5 class="modal-title font-heading mb-0 text-white"><i class="fas fa-circle-dot me-2"></i>Create New Issue / Task</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('student.create_issue', project_id=project.id) }}" method="POST">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Issue Title <span class="text-danger">*</span></label>
+            <input type="text" name="title" class="form-control" placeholder="e.g. Fix JWT token expiration in Auth API" required>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Category Label</label>
+              <select name="label" class="form-select">
+                <option value="bug">🐛 Bug</option>
+                <option value="feature">✨ Feature</option>
+                <option value="enhancement" selected>⚡ Enhancement</option>
+                <option value="documentation">📚 Documentation</option>
+                <option value="task">📋 Task</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Priority</label>
+              <select name="priority" class="form-select">
+                <option value="low">Low</option>
+                <option value="medium" selected>Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Assign To Teammate</label>
+            <select name="assigned_to_id" class="form-select">
+              <option value="">Unassigned</option>
+              {% for m in project.members %}
+                <option value="{{ m.user.id }}">{{ m.user.full_name }} ({{ m.role_in_team }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-0">
+            <label class="form-label fw-semibold small">Description & Expected Behavior</label>
+            <textarea name="description" class="form-control" rows="3" placeholder="Steps to reproduce, requirements, or acceptance criteria..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-ph btn-sm">Submit Issue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Add Pull Request Modal -->
+<div class="modal fade" id="addPRModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header bg-navy text-white">
+        <h5 class="modal-title font-heading mb-0 text-white"><i class="fas fa-code-pull-request me-2"></i>Open Pull Request</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form action="{{ url_for('student.create_pull_request', project_id=project.id) }}" method="POST">
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Pull Request Title <span class="text-danger">*</span></label>
+            <input type="text" name="title" class="form-control" placeholder="e.g. Integrate Redis Cache & Docker Healthchecks" required>
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Source Branch</label>
+              <input type="text" name="source_branch" class="form-control" value="feature/backend-api" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small">Target Branch</label>
+              <input type="text" name="target_branch" class="form-control" value="main" required>
+            </div>
+          </div>
+          <div class="mb-0">
+            <label class="form-label fw-semibold small">Summary of Changes</label>
+            <textarea name="description" class="form-control" rows="4" placeholder="Describe the feature implemented, test results, and dependencies added..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary-ph btn-sm">Create Pull Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 6. Add Milestone Modal -->
 <div class="modal fade" id="addMilestoneModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg">
@@ -611,7 +1361,7 @@
   </div>
 </div>
 
-<!-- 2. Upload File Modal -->
+<!-- 7. Upload File Modal -->
 <div class="modal fade" id="uploadFileModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow-lg">
@@ -656,48 +1406,75 @@
   </div>
 </div>
 
-<!-- 3. Commit Code Snippet Modal -->
-<div class="modal fade" id="addCodeSnippetModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header bg-navy text-white">
-        <h5 class="modal-title font-heading mb-0 text-white"><i class="fas fa-code-branch me-2"></i>Commit Code Snippet</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form action="{{ url_for('student.add_code_snippet', project_id=project.id) }}" method="POST">
-        <div class="modal-body p-4">
-          <div class="row g-3 mb-3">
-            <div class="col-md-6">
-              <label class="form-label fw-semibold small">File Name</label>
-              <input type="text" name="file_name" class="form-control" placeholder="e.g. auth_service.py" required>
-            </div>
-            <div class="col-md-6">
-              <label class="form-label fw-semibold small">Language</label>
-              <select name="language" class="form-select" required>
-                <option value="python" selected>Python</option>
-                <option value="javascript">JavaScript / TypeScript</option>
-                <option value="sql">SQL</option>
-                <option value="html">HTML/CSS</option>
-                <option value="cpp">C / C++</option>
-                <option value="solidity">Solidity</option>
-              </select>
-            </div>
-          </div>
-          <div class="mb-3">
-            <label class="form-label fw-semibold small">Commit Message</label>
-            <input type="text" name="commit_message" class="form-control" placeholder="e.g. Add JWT validation and rate limiter middleware" required>
-          </div>
-          <div class="mb-0">
-            <label class="form-label fw-semibold small">Source Code</label>
-            <textarea name="code_content" class="form-control font-monospace" rows="8" placeholder="def authenticate(token):&#10;    # Your code here..." required></textarea>
-          </div>
-        </div>
-        <div class="modal-footer bg-light">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary-ph btn-sm">Commit Snippet</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Code Studio Dynamic File Switching
+let currentActiveSnippetId = "{{ snippets[0].id if snippets else '' }}";
+
+function loadSnippetFile(snippetId, fileName, language, branch, commitMsg, authorName) {
+  currentActiveSnippetId = snippetId;
+  
+  // Highlight active item in sidebar
+  document.querySelectorAll('.studio-file-item').forEach(el => el.classList.remove('active'));
+  const activeItem = document.getElementById('file-item-' + snippetId);
+  if (activeItem) activeItem.classList.add('active');
+
+  // Update headers
+  document.getElementById('activeFileName').innerText = fileName;
+  document.getElementById('activeFileLang').innerText = language;
+  document.getElementById('activeFileBranch').innerText = branch;
+  document.getElementById('activeCommitMsg').innerHTML = `<i class="fas fa-code-commit text-primary me-1"></i> ${commitMsg}`;
+  document.getElementById('activeAuthorMeta').innerText = `Committed by ${authorName}`;
+
+  // Update delete form action
+  const deleteForm = document.getElementById('deleteSnippetForm');
+  if (deleteForm) {
+    deleteForm.action = `/student/workspace/{{ project.id }}/code/delete/${snippetId}`;
+  }
+
+  // Update edit modal fields
+  const editFileName = document.getElementById('editModalFileName');
+  const editLang = document.getElementById('editModalLang');
+  const editBranch = document.getElementById('editModalBranch');
+  const editContent = document.getElementById('editModalContent');
+
+  if (editFileName) editFileName.value = fileName;
+  if (editLang) editLang.value = language;
+  if (editBranch) editBranch.value = branch;
+
+  // Retrieve raw content from hidden data store
+  const rawElement = document.getElementById('raw-snippet-' + snippetId);
+  const codeContent = rawElement ? rawElement.value : '';
+
+  if (editContent) editContent.value = codeContent;
+
+  // Update Code block & re-run Prism syntax highlighting
+  const codeBlock = document.getElementById('activeCodeBlock');
+  if (codeBlock) {
+    codeBlock.className = 'language-' + language;
+    codeBlock.textContent = codeContent;
+    if (window.Prism) {
+      Prism.highlightElement(codeBlock);
+    }
+  }
+}
+
+function copyCurrentActiveCode() {
+  const rawElement = document.getElementById('raw-snippet-' + currentActiveSnippetId);
+  if (rawElement) {
+    copyToClipboard(rawElement.value, 'Source code copied to clipboard!');
+  }
+}
+
+// Render README Markdown using Marked.js if available
+document.addEventListener('DOMContentLoaded', () => {
+  const readmeRaw = document.getElementById('readmeRawSource');
+  const readmeTarget = document.getElementById('readmeRenderedTarget');
+  if (readmeRaw && readmeTarget && window.marked) {
+    readmeTarget.innerHTML = marked.parse(readmeRaw.innerText);
+  }
+});
+</script>
 {% endblock %}

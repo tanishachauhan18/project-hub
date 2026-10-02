@@ -37,8 +37,62 @@ def test_endpoints():
     assert ws_res.status_code == 200, f"Workspace failed: {ws_res.status_code}"
     assert "DevSphere" in ws_res.text
     assert "Milestones" in ws_res.text
-    assert "Code Repository" in ws_res.text
+    assert "Code Studio" in ws_res.text
+    assert "Issues" in ws_res.text
+    assert "Pull Requests" in ws_res.text
     print("[PASS] 4. Student Project Workspace & Tabs (200 OK)")
+
+    # 4a. Test Code Studio File Commit
+    commit_res = session.post(f"{BASE_URL}/student/workspace/1/code/save", data={
+        'file_name': 'test_feature.py',
+        'language': 'python',
+        'code_content': 'def test_calc():\n    return 42\n',
+        'commit_message': 'Add test calculation feature',
+        'branch': 'main'
+    }, allow_redirects=True)
+    assert commit_res.status_code == 200
+    assert "test_feature.py" in commit_res.text
+    print("[PASS] 4a. In-Browser Code Studio Commit / Save File (200 OK)")
+
+    # 4b. Test Download ZIP
+    zip_res = session.get(f"{BASE_URL}/student/workspace/1/code/download-zip")
+    assert zip_res.status_code == 200
+    assert zip_res.headers.get('Content-Type') == 'application/zip'
+    assert len(zip_res.content) > 0
+    print("[PASS] 4b. Codebase Export / Download ZIP (200 OK)")
+
+    # 4c. Test GitHub Issue Creation & Toggle
+    issue_res = session.post(f"{BASE_URL}/student/workspace/1/issues/create", data={
+        'title': 'Test WebSocket latency optimization',
+        'description': 'Profile terminal streaming under high load',
+        'label': 'enhancement',
+        'priority': 'high'
+    }, allow_redirects=True)
+    assert issue_res.status_code == 200
+    assert "WebSocket latency optimization" in issue_res.text
+    print("[PASS] 4c. GitHub Issues Creation (200 OK)")
+
+    # 4d. Test GitHub Pull Request Creation & Merge
+    pr_res = session.post(f"{BASE_URL}/student/workspace/1/pr/create", data={
+        'title': 'Add WebSocket reconnect backoff',
+        'description': 'Implements exponential backoff on socket drop',
+        'source_branch': 'feature/ws-backoff',
+        'target_branch': 'main'
+    }, allow_redirects=True)
+    assert pr_res.status_code == 200
+    assert "WebSocket reconnect backoff" in pr_res.text
+    print("[PASS] 4d. GitHub Pull Request Creation (200 OK)")
+
+    # 4e. Test Shareable Invite Link & Joining via Link
+    from app.models import Project
+    from app import create_app
+    with create_app().app_context():
+        p = Project.query.get(1)
+        invite_code = p.invite_code
+
+    join_page_res = session.get(f"{BASE_URL}/join/{invite_code}", allow_redirects=True)
+    assert join_page_res.status_code == 200
+    print("[PASS] 4e. Public / Student Shareable Collaboration Link (/join/<code>) (200 OK)")
 
     # 5. Test AI Assistant Endpoints
     ai_res = session.post(f"{BASE_URL}/api/ai/project-ideas", json={'domain': 'AI/ML'})
@@ -79,7 +133,8 @@ def test_endpoints():
         assert res.status_code == 200, f"Admin route {adm_route} failed: {res.status_code}"
         print(f"[PASS] 11. Admin Route ({adm_route}) (200 OK)")
 
-    print("\nALL 11 VERIFICATION TEST SUITES PASSED FLAWLESSLY!")
+    print("\nALL VERIFICATION TEST SUITES (INCLUDING GITHUB COLLABORATION SUITE) PASSED FLAWLESSLY!")
 
 if __name__ == '__main__':
     test_endpoints()
+

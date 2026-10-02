@@ -44,6 +44,8 @@ def login():
                 elif user.role == 'faculty':
                     return redirect(url_for('faculty.dashboard'))
                 else:
+                    if session.get('pending_invite'):
+                        return redirect(url_for('student.join_project', invite_code=session.pop('pending_invite')))
                     return redirect(url_for('student.dashboard'))
 
         # Standard login form
@@ -75,6 +77,8 @@ def login():
             elif user.role == 'faculty':
                 return redirect(url_for('faculty.dashboard'))
             else:
+                if session.get('pending_invite'):
+                    return redirect(url_for('student.join_project', invite_code=session.pop('pending_invite')))
                 return redirect(url_for('student.dashboard'))
         else:
             flash('Invalid email or password. Please try again.', 'danger')

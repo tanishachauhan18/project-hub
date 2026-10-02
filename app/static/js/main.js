@@ -226,3 +226,68 @@ async function runAICodeReview() {
     btn.innerHTML = '<i class="fas fa-code-branch me-2"></i>Run AI Code Analysis';
   }
 }
+
+/**
+ * Universal Clipboard Copy Helper
+ */
+function copyToClipboard(text, customMessage = 'Copied to clipboard!') {
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToastNotification(customMessage);
+    }).catch(err => {
+      fallbackCopyText(text, customMessage);
+    });
+  } else {
+    fallbackCopyText(text, customMessage);
+  }
+}
+
+function fallbackCopyText(text, customMessage) {
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.style.position = "fixed";
+  textArea.style.left = "-999999px";
+  textArea.style.top = "-999999px";
+  document.body.appendChild(textArea);
+  textArea.focus();
+  textArea.select();
+  try {
+    document.execCommand('copy');
+    showToastNotification(customMessage);
+  } catch (err) {
+    console.error('Fallback copy failed', err);
+  }
+  document.body.removeChild(textArea);
+}
+
+function showToastNotification(message) {
+  let toastContainer = document.getElementById('phToastContainer');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'phToastContainer';
+    toastContainer.style.position = 'fixed';
+    toastContainer.style.bottom = '24px';
+    toastContainer.style.right = '24px';
+    toastContainer.style.zIndex = '9999';
+    document.body.appendChild(toastContainer);
+  }
+
+  const toastEl = document.createElement('div');
+  toastEl.className = 'toast align-items-center text-white bg-navy border-0 shadow-lg show';
+  toastEl.style.backgroundColor = '#0b132b';
+  toastEl.style.borderRadius = '8px';
+  toastEl.style.padding = '10px 16px';
+  toastEl.style.marginBottom = '10px';
+  toastEl.style.display = 'flex';
+  toastEl.style.alignItems = 'center';
+  toastEl.style.gap = '10px';
+  toastEl.innerHTML = `<i class="fas fa-check-circle text-success fs-5"></i> <div class="fw-semibold">${message}</div>`;
+
+  toastContainer.appendChild(toastEl);
+  setTimeout(() => {
+    toastEl.style.transition = 'opacity 0.5s ease';
+    toastEl.style.opacity = '0';
+    setTimeout(() => toastEl.remove(), 500);
+  }, 3000);
+}
+

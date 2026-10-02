@@ -87,6 +87,17 @@ class Project(db.Model):
     discussions = db.relationship('Discussion', backref='project', lazy=True, cascade="all, delete-orphan", order_by="Discussion.created_at")
     feedbacks = db.relationship('Feedback', backref='project', lazy=True, cascade="all, delete-orphan", order_by="desc(Feedback.created_at)")
     evaluation = db.relationship('Evaluation', backref='project', uselist=False, cascade="all, delete-orphan")
+    issues = db.relationship('ProjectIssue', backref='project', lazy=True, cascade="all, delete-orphan", order_by="desc(ProjectIssue.created_at)")
+    pull_requests = db.relationship('ProjectPullRequest', backref='project', lazy=True, cascade="all, delete-orphan", order_by="desc(ProjectPullRequest.created_at)")
+    activities = db.relationship('ProjectActivity', backref='project', lazy=True, cascade="all, delete-orphan", order_by="desc(ProjectActivity.created_at)")
+
+    invite_code = db.Column(db.String(64), unique=True, nullable=True, index=True)
+
+    def ensure_invite_code(self):
+        import secrets
+        if not self.invite_code:
+            self.invite_code = f"hub_{secrets.token_urlsafe(8)}"
+        return self.invite_code
 
     def update_progress(self):
         """Recalculates progress percentage based on completed milestones."""
@@ -157,9 +168,76 @@ class CodeSnippet(db.Model):
     language = db.Column(db.String(50), default='python', nullable=False)
     code_content = db.Column(db.Text, nullable=False)
     commit_message = db.Column(db.String(255), nullable=False)
+    branch = db.Column(db.String(50), default='main', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     author = db.relationship('User', foreign_keys=[author_id])
+
+
+class ProjectIssue(db.Model):
+    __tablename__ = 'project_issues'
+
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    assigned_to_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    label = db.Column(db.String(50), default='enhancement', nullable=False)  # 'bug', 'feature', 'enhancement', 'documentation', 'task'
+    priority = db.Column(db.String(20), default='medium', nullable=False)  # 'low', 'medium', 'high', 'critical'
+    status = db.Column(db.String(20), default='open', nullable=False)  # 'open', 'closed'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    closed_at = db.Column(db.DateTime, nullable=True)
+
+    creator = db.relationship('User', foreign_keys=[created_by_id])
+    assignee = db.relationship('User', foreign_keys=[assigned_to_id])
+    comments = db.relationship('IssueComment', backref='issue', lazy=True, cascade="all, delete-orphan", order_by="IssueComment.created_at")
+
+
+class IssueComment(db.Model):
+    __tablename__ = 'issue_comments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    issue_id = db.Column(db.Integer, db.ForeignKey('project_issues.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    comment = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship('User', foreign_keys=[user_id])
+
+
+class ProjectPullRequest(db.Model):
+    __tablename__ = 'project_pull_requests'
+
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    source_branch = db.Column(db.String(50), default='feature', nullable=False)
+    target_branch = db.Column(db.String(50), default='main', nullable=False)
+    status = db.Column(db.String(20), default='open', nullable=False)  # 'open', 'merged', 'closed'
+    merged_by_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    merged_at = db.Column(db.DateTime, nullable=True)
+
+    author = db.relationship('User', foreign_keys=[author_id])
+    merged_by = db.relationship('User', foreign_keys=[merged_by_id])
+
+
+class ProjectActivity(db.Model):
+    __tablename__ = 'project_activities'
+
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    activity_type = db.Column(db.String(50), nullable=False)  # 'commit', 'file_upload', 'issue_created', 'issue_closed', 'pr_opened', 'pr_merged', 'member_joined'
+    title = db.Column(db.String(255), nullable=False)
+    details = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship('User', foreign_keys=[user_id])
 
 
 class Discussion(db.Model):
